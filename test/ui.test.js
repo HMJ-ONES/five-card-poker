@@ -1,7 +1,7 @@
 // Five-Card Draw UI smoke test (jsdom, no browser needed).
-// Drives a real local game through the DOM: ante propose/enter, draw,
+// Drives a real local game through the DOM: ante modal propose/enter, draw,
 // staged chip betting (stage 1000+500+100, take one back, Bet Ready),
-// dead-round panel, leave + banned screens exist.
+// dead-round note, leave + banned screens exist.
 // Run: node test/ui.test.js
 const fs = require('fs');
 const path = require('path');
@@ -28,6 +28,10 @@ function check(name, cond, extra) {
 
   /* ---- static checks: every new panel/button exists ---- */
   check('ante panel exists', !!$('anteBox'));
+  check('ante is a modal pop-up in front of the table', $('anteBox').classList.contains('modal'));
+  check('modal Leave button exists inside the ante modal', !!$('btnLeaveMatchAnte') && $('anteBox').contains($('btnLeaveMatchAnte')));
+  check('shoot button sits above the ante modal (z 80 > 50)', /#shootBtn\{[^}]*z-index:\s*80/.test(html) && /\.modal\{[^}]*z-index:\s*50/.test(html));
+  check('ante modal has no dismiss X', !$('anteBox').querySelector('.modal-x'));
   check('ante propose container exists', !!$('antePropose'));
   check('ante enter container exists', !!$('anteEnter'));
   check('staging tray exists', !!$('stageBox'));

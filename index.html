@@ -110,8 +110,9 @@ body.round-table #chipRack{position:absolute;left:50%;top:68%;transform:translat
 .pile{text-align:center}
 .pile .lbl{font-size:12px;color:#d1fae5;font-weight:700;margin-top:6px}
 .pile .count{font-size:12px;color:var(--mut)}
-/* ---- Ante round + staged betting ---- */
-#anteBox{background:linear-gradient(180deg,#2e1c0b,#221407);border:2px solid var(--gold);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+/* ---- Ante round (modal pop-up in front of the table — impossible to miss)
+   + staged betting ---- */
+#anteBox .box{background:linear-gradient(180deg,#2e1c0b,#221407);border:2px solid var(--gold);border-radius:14px;padding:18px 20px}
 #anteBox h3{font-size:17px;margin-bottom:4px}
 #anteBox .ante-sub{color:var(--mut);font-size:13.5px;line-height:1.5}
 #anteBox .ante-set{font-size:16px;font-weight:800;color:var(--gold);margin-top:8px}
@@ -219,14 +220,15 @@ body.shake{animation:shakeanim .5s ease}
 <!-- ============ GAME ============ -->
 <div id="gameScreen" class="hidden">
   <div class="status" id="statusBox">Waiting…<small id="statusSub"></small></div>
-  <div id="anteBox" class="hidden">
+  <div id="anteBox" class="modal hidden"><div class="box">
     <h3>🎩 ANTE — fastest click sets the entry amount</h3>
     <div class="ante-sub" id="anteStatus"></div>
     <div class="ante-pick" id="antePropose" style="justify-content:flex-start;margin:12px 0 4px"></div>
     <div id="anteEnter" class="row" style="margin-top:10px"></div>
     <div id="anteDeadNote" class="hidden"></div>
     <div id="anteWaiting"></div>
-  </div>
+    <div class="row" style="justify-content:center;margin-top:14px"><button id="btnLeaveMatchAnte" type="button" class="danger small">🚪 Leave match</button></div>
+  </div></div>
   <div class="table-wrap">
     <div class="seats" id="opponentsBox"></div>
     <div class="center-row">
@@ -1999,6 +2001,7 @@ function leaveMatch(){
   backToMenu();
 }
 $('btnLeaveMatch').addEventListener('click', leaveMatch);
+$('btnLeaveMatchAnte').addEventListener('click', leaveMatch); // same action, inside the ante modal so it stays reachable while the modal is up
 function backToMenu(){
   staged=[]; stagedBaseBet=0;
   if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
