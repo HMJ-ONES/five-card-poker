@@ -106,6 +106,69 @@ body.round-table #opponentsBox,body.round-table #mySeat{position:absolute;inset:
 body.round-table .seat{position:absolute;pointer-events:auto;max-width:320px}
 body.round-table .center-row{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;z-index:2}
 body.round-table #chipRack{position:absolute;left:50%;top:68%;transform:translateX(-50%);margin:0;width:100%;z-index:2}
+/* ---- Compact landscape (phones held sideways) ----
+   Diagnosis (Nov 22, from a real phone screenshot): the desktop round
+   table fires on landscape phones too, but its fixed 560px-high wrap and
+   absolute seats/chips overflow a ~390px-tall viewport — the hand is cut
+   off at the bottom, the chip rack + staging tray sit on top of the
+   player's cards and name bar, and seats spill past the right edge
+   (horizontal scrollbar). Compact mode is a plain flow layout sized to
+   the viewport instead: no absolute positioning anywhere in the table,
+   no fixed heights, nothing wider than the screen. Driven by JS
+   (layoutModeFor): body.landscape-compact. Portrait is untouched. */
+@media (orientation: landscape) and (max-height: 560px){
+  body.landscape-compact{overflow-x:hidden;padding-bottom:0}
+  body.landscape-compact .wrap{max-width:none;padding:4px 8px}
+  body.landscape-compact header,body.landscape-compact footer{display:none}
+  body.landscape-compact #gameScreen{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  body.landscape-compact #statusBox{flex:none;padding:4px 10px;font-size:13px;margin-bottom:4px}
+  body.landscape-compact #statusBox small{font-size:12px;margin-top:1px}
+  body.landscape-compact .table-wrap{flex:1;min-height:0;display:flex;flex-direction:column;padding:6px 8px;overflow-y:auto;overflow-x:hidden;border-radius:14px}
+  body.landscape-compact .seats{display:flex;gap:6px;justify-content:center;flex:none}
+  body.landscape-compact .seat{flex:1 1 0;min-width:0;padding:4px 6px}
+  body.landscape-compact .seat .sname{font-size:12px}
+  body.landscape-compact .seat .scards{gap:3px;margin-top:4px;flex-wrap:nowrap}
+  body.landscape-compact .mini-card{width:clamp(18px,3.1vw,26px);height:clamp(26px,4.4vw,36px);font-size:11px;border-radius:4px}
+  body.landscape-compact .center-row{flex:none;margin:2px 0;gap:14px;align-items:center}
+  body.landscape-compact .pot-box .pot-total{font-size:20px}
+  body.landscape-compact .pile .card-big{width:34px;height:48px;font-size:15px}
+  body.landscape-compact .pile .lbl{font-size:11px;margin-top:3px}
+  body.landscape-compact .pile .count{font-size:11px}
+  body.landscape-compact #mySeat{flex:none;display:flex;justify-content:center}
+  body.landscape-compact #mySeat .seat{flex:none;max-width:100%}
+  body.landscape-compact #mySeat .card-big{width:clamp(44px,6vw,52px);height:clamp(62px,8.4vw,72px);font-size:17px;border-radius:8px}
+  body.landscape-compact #mySeat .card-big .suit{font-size:16px}
+  body.landscape-compact #chipRack{flex:none;margin:4px 0;gap:8px}
+  body.landscape-compact #chipRack .chip{width:36px;height:36px;font-size:11px;border-width:3px}
+  body.landscape-compact #chipRack .pot-drop{min-width:0;flex:1;padding:6px 10px;font-size:13px;border-radius:10px}
+  body.landscape-compact #stageBox{flex:none;margin:4px 0;padding:6px 8px;max-width:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;justify-content:center}
+  body.landscape-compact #stageBox .stage-total{font-size:14px}
+  body.landscape-compact #stageBox .stage-effect{font-size:12px;min-height:0}
+  body.landscape-compact #stageBox #stageChips{min-height:36px;margin:2px 0}
+  body.landscape-compact #stageBox #stageChips .chip{width:32px;height:32px;font-size:11px}
+  body.landscape-compact #stageBox button{padding:8px 12px;font-size:13px}
+  body.landscape-compact #drawBox,body.landscape-compact #betBox{margin-top:4px!important;flex:none}
+  body.landscape-compact #drawBox button,body.landscape-compact #betBox button{padding:8px 12px;font-size:13px}
+  body.landscape-compact #betPrompt{display:none}
+  body.landscape-compact #effectPrompt{flex:none;margin-top:2px;min-height:16px;font-size:13px}
+  body.landscape-compact #gameScreen>.row{flex:none;flex-wrap:nowrap;overflow-x:auto;margin-top:2px;padding-bottom:2px}
+  body.landscape-compact #gameScreen>.card{display:none}
+  body.landscape-compact .modal{padding:8px}
+  body.landscape-compact .modal .box{max-height:92vh;padding:16px}
+  body.landscape-compact #anteBox .box{padding:12px 14px}
+  body.landscape-compact #anteBox .ante-pick button{font-size:16px;padding:10px 14px}
+  body.landscape-compact #shootBtn{font-size:15px;padding:10px 14px;right:10px;bottom:10px}
+  /* Bet turn is the tallest moment (staging tray + action buttons both
+     visible): shrink everything a touch more while staging, so the hand
+     still fits. Toggled by JS in updateStageUI() via body.staging. */
+  body.landscape-compact.staging .mini-card{width:20px;height:28px}
+  body.landscape-compact.staging .seat{padding:3px 6px}
+  body.landscape-compact.staging .pile .card-big{width:28px;height:40px;font-size:13px}
+  body.landscape-compact.staging #mySeat .card-big{width:42px;height:60px;font-size:15px}
+  body.landscape-compact.staging #chipRack .chip{width:32px;height:32px}
+  body.landscape-compact.staging #stageBox #stageChips .chip{width:32px;height:32px}
+  body.landscape-compact.staging .pot-box .pot-total{font-size:18px}
+}
 .center-row{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;margin:14px 0}
 .pile{text-align:center}
 .pile .lbl{font-size:12px;color:#d1fae5;font-weight:700;margin-top:6px}
@@ -1301,7 +1364,23 @@ function canJoinRoom(roomInfo, currentCount, clientId){
   if(currentCount>=roomInfo.maxPlayers) return {ok:false, error:'room is full ('+roomInfo.players+'/'+roomInfo.maxPlayers+' players, bots included)'};
   return {ok:true};
 }
-if(typeof module!=='undefined'&&module.exports){ module.exports={STARTING_STACK,ANTE_OPTIONS,DEFAULT_ANTE,HIGH_ANTE,RANKS,SUITS,RANK_VALUE,MAX_DRAW,SHOOTOUT_BULLETS,SHOOTOUT_WINDOW_MS,DISCONNECT_GRACE_MS,MAX_QUICK_RECONNECTS,mulberry32,randomSeed,shuffle,buildDeck,ordinal,evaluateHand,handName,compareHands,newGame,createGameState,currentPlayer,playerById,startHand,beginAnteRound,proposeAnte,enterHand,computePayouts,applyAction,applyBetTotal,legalActions,filteredView,stateFingerprint,serializeState,deserializeState,removePlayer,addPlayer,fireShot,resolveShootout,cancelShootout,disarmShootout,isShootoutArmed,markDisconnected,reconnectClient,withdrawDisconnected,banClient,isBanned,botDrawSlots,botChooseAction,botProposeAnte,botEnterHand,DIRECTORY_SLOTS,directoryPeerId,createRoomInfo,canJoinRoom}; }
+/* ---- Table layout modes (pure functions, no DOM) ----
+   'compact' = landscape phone / short viewport (height <= 560px): a flow
+   layout sized to the viewport (see the compact-landscape CSS). The old
+   desktop round table needs a tall screen, so it only applies when the
+   viewport is both wide AND tall enough. Anything else is 'stacked'
+   (portrait). */
+function layoutModeFor(width, height){
+  if(width>height && height<=560) return 'compact';
+  if(width>=700 && width>height) return 'round';
+  return 'stacked';
+}
+function seatPositionsFor(n, cx, cy, rx, ry){
+  const out=[];
+  for(let i=0;i<n;i++){ const a=(Math.PI/2)+(i/n)*Math.PI*2; out.push({x:cx+rx*Math.cos(a), y:cy+ry*Math.sin(a)}); }
+  return out;
+}
+if(typeof module!=='undefined'&&module.exports){ module.exports={STARTING_STACK,ANTE_OPTIONS,DEFAULT_ANTE,HIGH_ANTE,RANKS,SUITS,RANK_VALUE,MAX_DRAW,SHOOTOUT_BULLETS,SHOOTOUT_WINDOW_MS,DISCONNECT_GRACE_MS,MAX_QUICK_RECONNECTS,mulberry32,randomSeed,shuffle,buildDeck,ordinal,evaluateHand,handName,compareHands,newGame,createGameState,currentPlayer,playerById,startHand,beginAnteRound,proposeAnte,enterHand,computePayouts,applyAction,applyBetTotal,legalActions,filteredView,stateFingerprint,serializeState,deserializeState,removePlayer,addPlayer,fireShot,resolveShootout,cancelShootout,disarmShootout,isShootoutArmed,markDisconnected,reconnectClient,withdrawDisconnected,banClient,isBanned,botDrawSlots,botChooseAction,botProposeAnte,botEnterHand,DIRECTORY_SLOTS,directoryPeerId,createRoomInfo,canJoinRoom,layoutModeFor,seatPositionsFor}; }
 </script>
 <script>
 "use strict";
@@ -1351,18 +1430,19 @@ function toast(msg){ $('effectPrompt').textContent=msg||''; }
 /* ---- Bot pacing (ONE editable const) ---- */
 const BOT_PACE = { thinkMin: 1400, thinkMax: 2000, afterDrawMin: 1100, afterDrawMax: 1400 };
 function pace(a,b){ return a+Math.random()*(b-a); }
-/* ---- Round table layout (landscape / desktop) ---- */
-function layoutModeFor(width, height){ return (width>=700 && width>height) ? 'round' : 'stacked'; }
-function seatPositionsFor(n, cx, cy, rx, ry){
-  const out=[];
-  for(let i=0;i<n;i++){ const a=(Math.PI/2)+(i/n)*Math.PI*2; out.push({x:cx+rx*Math.cos(a), y:cy+ry*Math.sin(a)}); }
-  return out;
-}
+/* ---- Round table layout (landscape / desktop) ----
+   layoutModeFor + seatPositionsFor live in the engine block (pure
+   functions, exported for tests). This just applies the mode to the
+   page: round-table for wide+landscape, landscape-compact for short
+   landscape (phones sideways), neither for portrait/stacked. */
 function applyLayoutMode(){
-  const round=(typeof window!=='undefined'&&window.matchMedia)
-    ? matchMedia('(orientation: landscape) and (min-width: 700px)').matches : false;
-  document.body.classList.toggle('round-table', !!round);
-  return round ? 'round' : 'stacked';
+  if(typeof window==='undefined') return 'stacked';
+  // Deliberately NOT gated on matchMedia: jsdom (and some embedded
+  // webviews) lack it, and the mode only needs the viewport size.
+  const mode=layoutModeFor(window.innerWidth||0, window.innerHeight||0);
+  document.body.classList.toggle('round-table', mode==='round');
+  document.body.classList.toggle('landscape-compact', mode==='compact');
+  return mode;
 }
 function positionRoundSeats(){
   if(!view) return;
@@ -1814,6 +1894,9 @@ function updateStageUI(){
     if(view.phase!=='bet'||!me||me.bet!==stagedBaseBet) staged=[];
   }
   show('stageBox', !!isMyBet);
+  // Bet turn is the tallest moment in compact landscape (staging tray +
+  // action buttons both visible): shrink the table a touch while staging.
+  document.body.classList.toggle('staging', !!isMyBet);
   if(!isMyBet) return;
   $('stageTotal').textContent=stageTotal();
   $('stageEffect').textContent=stageEffectText();
@@ -2658,11 +2741,13 @@ function startHostedGame(){
     if(room){ $('joinCode').value=room; setMenuMsg('Lobby '+room+' detected — press Join lobby to enter.'); }
   }catch(e){}
 })();
-if(typeof window!=='undefined' && window.matchMedia){
-  const mq=matchMedia('(orientation: landscape) and (min-width: 700px)');
+if(typeof window!=='undefined' && window.addEventListener){
+  // Layout depends on the real viewport size (compact mode keys off a
+  // short height, which a media query alone cannot express for the JS
+  // class switch), so re-apply on resize / rotation.
   const onLayoutChange=()=>{ applyLayoutMode(); render(); };
-  if(mq.addEventListener) mq.addEventListener('change', onLayoutChange);
-  else if(mq.addListener) mq.addListener(onLayoutChange);
+  window.addEventListener('resize', onLayoutChange);
+  window.addEventListener('orientationchange', onLayoutChange);
 }
 applyLayoutMode();
 </script>
