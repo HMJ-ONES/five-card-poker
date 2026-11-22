@@ -1,0 +1,2667 @@
+<!DOCTYPE html>
+<!-- Five-Card Draw — Wild West Poker v1.1 — free, 2-6 players, PeerJS P2P, $0 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Five-Card Draw — Wild West Poker</title>
+<meta name="description" content="Five-Card Draw — Wild West Poker: a free browser card game for 2-6 players. Ante up, draw up to 3 cards, one round of betting, best hand takes the pot. No sign-up, no cost.">
+<style>
+:root{--bg:#1a0f08;--felt:#14532d;--felt2:#166534;--panel:#221407;--panel2:#2e1c0b;--line:#4a2f16;--txt:#f5eeda;--mut:#c9b48a;--gold:#f2c14e;--green:#58b368;--red:#e5484d;--blue:#4c9aff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100%}
+body{padding:0 0 40px}
+a{color:var(--gold)}
+.wrap{max-width:1060px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 0 4px}
+.logo{font-size:30px;font-weight:900;letter-spacing:.5px}
+.logo span{color:var(--gold)}
+.tag{color:var(--mut);font-size:13px;margin-top:2px}
+.badge{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--mut);white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+h2{font-size:19px;margin-bottom:6px}
+p{color:var(--mut);font-size:14px;line-height:1.5}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+input[type=text],input[type=number]{background:#0c0e12;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:11px 12px;font-size:16px;min-width:0}
+input[type=text]:focus,input[type=number]:focus{outline:2px solid var(--gold);outline-offset:1px}
+button{font-family:inherit;font-size:15px;font-weight:700;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;color:#111;background:var(--gold)}
+button:hover{filter:brightness(1.07)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+button.danger{background:#3a1d1f;color:#ffb3b5;border:1px solid #5b2a2d}
+button.small{padding:8px 11px;font-size:13px}
+.btn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:14px}
+.btn-grid button{width:100%}
+.hidden{display:none!important}
+.rules{margin-top:14px;font-size:13.5px}
+.rules li{margin:6px 0 6px 18px;color:var(--mut);line-height:1.5}
+.rules li b{color:var(--txt)}
+table.points{border-collapse:collapse;margin:8px 0;font-size:14px}
+table.points td,table.points th{border:1px solid var(--line);padding:6px 10px;text-align:left}
+table.points th{color:var(--gold)}
+/* table */
+.table-wrap{background:radial-gradient(ellipse at center,var(--felt2) 0%,var(--felt) 55%,#0d3b1e 100%);border:3px solid #5b3a1e;border-radius:20px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.seats{display:grid;grid-template-columns:1fr;gap:10px}
+.seat{background:rgba(0,0,0,.25);border:2px solid transparent;border-radius:12px;padding:8px 10px}
+.seat.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(242,193,78,.3)}
+.seat .sname{font-weight:800;font-size:14px}
+.seat .sname .tag2{font-weight:500;color:var(--mut);font-size:12px}
+.seat .scards{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.mini-card{width:34px;height:48px;border-radius:6px;background:#fff;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:13px;line-height:1;border:1px solid #999}
+.mini-card.red{color:#c81e1e}
+.mini-card.back{background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 6px,#991b1b 6px,#991b1b 12px);color:#fff;border-color:#450a0a}
+.mini-card.sel{outline:3px solid var(--gold)}
+.card-big{width:64px;height:92px;border-radius:10px;background:#fff;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:22px;line-height:1.1;border:2px solid #999;cursor:pointer;user-select:none}
+.card-big.red{color:#c81e1e}
+.card-big.back{background:repeating-linear-gradient(45deg,#7f1d1d,#7f1d1d 8px,#991b1b 8px,#991b1b 16px);color:#fff;border-color:#450a0a}
+.card-big.sel{outline:4px solid var(--gold)}
+.card-big .suit{font-size:20px}
+.card-big .pts{font-size:11px;font-weight:700;color:#555}
+.card-big.back .pts{color:#fecaca}
+.card-big,.mini-card{position:relative}
+.seen-dot{position:absolute;top:4px;right:5px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 5px rgba(242,193,78,.95);z-index:2}
+.pot-box{text-align:center}
+.pot-box .pot-total{font-size:26px;font-weight:900;color:var(--gold)}
+.pot-box .lbl{font-size:12px;color:#d1fae5;font-weight:700;margin-top:4px}
+.chip-rack{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin:12px 0}
+.chip{width:56px;height:56px;border-radius:50%;border:4px dashed rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;cursor:grab;user-select:none;touch-action:none;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+.chip:active{cursor:grabbing}
+.chip.c10{background:#2563eb}.chip.c100{background:#16a34a}.chip.c500{background:#7c3aed}.chip.c1000{background:#dc2626}
+.chip.dragging{opacity:.6}
+.pot-drop{border:3px dashed var(--gold);border-radius:14px;padding:10px 14px;text-align:center;color:var(--gold);font-weight:800;min-width:180px}
+.pot-drop.drop-ready{background:rgba(242,193,78,.2);outline:3px solid var(--gold)}
+.dealer-badge{display:inline-block;background:var(--gold);color:#422006;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.status{font-size:16px;font-weight:800;padding:12px 14px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);margin-bottom:12px;line-height:1.4}
+.status small{display:block;font-weight:500;color:var(--mut);font-size:13px;margin-top:3px}
+.log{max-height:180px;overflow:auto;font-size:13.5px;line-height:1.7;color:var(--mut)}
+.log b{color:var(--txt)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:520px;width:100%;max-height:88vh;overflow:auto;position:relative}
+.modal .box h2{font-size:22px}
+.modal-x{position:absolute;top:8px;left:10px;background:transparent;border:none;color:var(--mut);font-size:22px;line-height:1;cursor:pointer;padding:6px 8px}
+.modal-x:hover{color:var(--txt)}
+#rulesModal h2{padding-left:30px}
+.bot-pick{display:flex;gap:10px;justify-content:center;margin:16px 0;flex-wrap:wrap}
+.bot-pick button{font-size:28px;padding:12px 18px;background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+.lobby-player{display:flex;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.end-card{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0}
+.end-card.winner{border-color:var(--gold);background:rgba(242,193,78,.08)}
+footer{color:var(--mut);font-size:12.5px;text-align:center;margin-top:26px;line-height:1.6}
+.ante-pick{display:flex;gap:10px;justify-content:center;margin:16px 0;flex-wrap:wrap}
+.ante-pick button{font-size:18px;padding:12px 18px;background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+/* ---- Whiskey (local cosmetic fun — wobbles ONLY the table/menu cards,
+   never the modals, buttons or log) ---- */
+body.drunk-mild .table-wrap,body.drunk-mild #menuScreen .card{animation:cogsway 7s ease-in-out infinite}
+body.drunk-strong .table-wrap,body.drunk-strong #menuScreen .card{animation:cogswaybig 5s ease-in-out infinite;filter:blur(.6px) saturate(1.15)}
+@keyframes cogsway{0%,100%{transform:rotate(0deg) translate(0,0)}25%{transform:rotate(.6deg) translate(4px,-2px)}50%{transform:rotate(0deg) translate(0,0)}75%{transform:rotate(-.6deg) translate(-4px,2px)}}
+@keyframes cogswaybig{0%,100%{transform:rotate(0deg) translate(0,0)}20%{transform:rotate(1.4deg) translate(10px,-5px)}40%{transform:rotate(-1deg) translate(-8px,4px)}60%{transform:rotate(1.2deg) translate(9px,5px)}80%{transform:rotate(-1.4deg) translate(-10px,-4px)}}
+@media (prefers-reduced-motion: reduce){
+  body.drunk-mild .table-wrap,body.drunk-mild #menuScreen .card,
+  body.drunk-strong .table-wrap,body.drunk-strong #menuScreen .card{animation:none;filter:none}
+}
+/* ---- Round table (landscape / desktop) ---- */
+body.round-table .table-wrap{position:relative;height:560px}
+body.round-table .seats{display:block}
+body.round-table #opponentsBox,body.round-table #mySeat{position:absolute;inset:0;pointer-events:none}
+body.round-table .seat{position:absolute;pointer-events:auto;max-width:320px}
+body.round-table .center-row{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;z-index:2}
+body.round-table #chipRack{position:absolute;left:50%;top:68%;transform:translateX(-50%);margin:0;width:100%;z-index:2}
+.center-row{display:flex;gap:18px;justify-content:center;align-items:flex-start;flex-wrap:wrap;margin:14px 0}
+.pile{text-align:center}
+.pile .lbl{font-size:12px;color:#d1fae5;font-weight:700;margin-top:6px}
+.pile .count{font-size:12px;color:var(--mut)}
+/* ---- Ante round + staged betting ---- */
+#anteBox{background:linear-gradient(180deg,#2e1c0b,#221407);border:2px solid var(--gold);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+#anteBox h3{font-size:17px;margin-bottom:4px}
+#anteBox .ante-sub{color:var(--mut);font-size:13.5px;line-height:1.5}
+#anteBox .ante-set{font-size:16px;font-weight:800;color:var(--gold);margin-top:8px}
+#anteDeadNote{color:#ffb3b5;font-weight:700;font-size:14px;margin-top:8px}
+#anteWaiting{color:var(--mut);font-size:13px;margin-top:8px}
+#stageBox{border:2px dashed var(--gold);border-radius:12px;padding:10px 12px;margin:10px auto;max-width:560px;background:rgba(242,193,78,.06)}
+#stageBox .stage-total{font-size:17px;font-weight:900;color:var(--gold)}
+#stageBox .stage-effect{font-size:13.5px;color:var(--mut);margin-top:2px;min-height:18px}
+#stageChips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0;min-height:56px;align-items:center}
+#stageChips .chip{width:48px;height:48px;font-size:12px}
+#stageChips .stage-empty{color:var(--mut);font-size:13px}
+.fly-card{position:fixed;z-index:120;pointer-events:none;transition:transform .55s cubic-bezier(.2,.7,.3,1),opacity .55s;margin:0}
+@media (prefers-reduced-motion: reduce){ .fly-card{transition:none} }
+/* ---- Shoot'em Dead (hidden rule — the button only ever appears when
+   the secret trigger arms it; it is never mentioned in the Rules) ---- */
+#shootBtn{position:fixed;right:16px;bottom:16px;z-index:80;background:#7f1d1d;color:#fff;border:3px solid #ef4444;font-size:18px;padding:14px 18px;border-radius:14px;box-shadow:0 0 24px rgba(239,68,68,.7);animation:shootpulse 1s infinite}
+@keyframes shootpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.chambers{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.chambers span{width:14px;height:14px;border-radius:50%;border:2px solid #fca5a5;background:transparent}
+.chambers span.spent{background:#ef4444}
+.muzzle{position:fixed;inset:0;z-index:90;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,220,120,.85),rgba(255,120,0,.35) 30%,transparent 60%);opacity:0;transition:opacity .12s}
+.muzzle.on{opacity:1}
+body.shake{animation:shakeanim .5s ease}
+@keyframes shakeanim{0%,100%{transform:translate(0,0)}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(4px,3px)}}
+.victim-flash{animation:vflash .5s ease 3}
+@keyframes vflash{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 24px 6px rgba(239,68,68,.8)}}
+@media (prefers-reduced-motion: reduce){ body.shake{animation:none} #shootBtn{animation:none} }
+</style>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><div class="logo">🤠 FIVE-CARD DRAW <span>— WILD WEST POKER</span></div><div class="tag">Ante up. Draw up to 3 cards. One round of betting. Best hand takes the pot.</div></div>
+  <div class="badge">FREE &nbsp;•&nbsp; NO SIGN-UP &nbsp;•&nbsp; 2–6 PLAYERS &nbsp;•&nbsp; PC + MOBILE</div>
+</header>
+
+<!-- ============ MENU ============ -->
+<div id="menuScreen">
+  <div class="card">
+    <h2>Play Five-Card Draw</h2>
+    <p>Each player gets <b>5 cards</b> and <b>5000 free chips</b>. Every hand opens with an <b>ante round</b> — the fastest click sets the entry amount, everyone else tops it up to enter or spectates that hand. Then each player may exchange <b>0–3 cards</b> once (discards go to the bottom of the deck, replacements come off the top). Then <b>one round of betting</b> — Fold, Call, Raise or All-in — and the best 5-card hand takes the pot. No community cards, no cards in the middle.</p>
+    <div class="row">
+      <label for="nameInput" style="color:var(--mut);font-size:14px">Your name</label>
+      <input type="text" id="nameInput" placeholder="e.g. Henrique" maxlength="20" style="flex:1;min-width:140px">
+      <button id="btnRules" type="button" class="ghost small">📖 Rules &amp; hands</button>
+    </div>
+    <div class="btn-grid">
+      <button id="btnCreate" type="button">➕ Create lobby<br><small style="font-weight:500;font-size:12px">get a code, invite up to 5 friends / bots</small></button>
+      <button id="btnBots" type="button" class="ghost">🤖 Play vs bots<br><small style="font-weight:500;font-size:12px">solo, right now — pick 1–5 bots</small></button>
+    </div>
+    <div class="row">
+      <input type="text" id="joinCode" placeholder="Lobby code — e.g. KQ7B" maxlength="8" style="flex:1;text-transform:uppercase">
+      <button id="btnJoin" type="button" class="ghost">Join lobby →</button>
+    </div>
+    <div class="row">
+      <button type="button" class="ghost small whiskey-sip">🥃 Drink Whiskey</button>
+      <span class="whiskey-count" style="color:var(--mut);font-size:14px">Sips: 0</span>
+      <span class="whiskey-status" style="color:var(--gold);font-size:14px;font-weight:700"></span>
+      <button type="button" class="ghost small whiskey-sober hidden">🧼 Sober up</button>
+    </div>
+    <p id="menuMsg" style="margin-top:10px;min-height:20px"></p>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h2>🌍 Public rooms</h2>
+    <p>Open lobbies anyone can join. <b>Tap a room to join it</b> — there is no automatic matchmaking; you always choose the room yourself. The list is kept by the room hosts themselves (no server), so it only shows lobbies whose host is online right now. Rooms disappear from the list once their game starts.</p>
+    <div class="row">
+      <button id="btnBrowseRooms" type="button" class="ghost">Browse public rooms</button>
+      <button id="btnRefreshRooms" type="button" class="ghost small">↻ Refresh</button>
+    </div>
+    <p id="roomsMsg" style="margin-top:10px;min-height:20px;color:var(--mut);font-size:14px">Press “Browse public rooms” to see open lobbies — or join a private lobby with its code above.</p>
+    <div id="roomsList" style="margin-top:8px"></div>
+  </div>
+  <div class="card rules" style="margin-top:14px">
+    <h2>How Five-Card Draw works</h2>
+    <ul>
+      <li><b>Goal: best 5-card hand takes the pot.</b> Hands rank: Royal Flush &gt; Straight Flush &gt; Four of a Kind &gt; Full House &gt; Flush &gt; Straight &gt; Three of a Kind &gt; Two Pair &gt; One Pair &gt; High Card. The wheel (A-2-3-4-5) counts as a straight.</li>
+      <li><b>Ante round (every hand):</b> the <b>fastest click wins</b> — tap <b>10 / 100 / 500 / 1000</b> to set the entry amount for this hand. Everyone else must <b>top up that amount to enter</b>; anyone who doesn't stays a <b>spectator for that hand</b> and is automatically offered entry again next hand (no leaving and rejoining). If nobody enters, the round is <b>dead</b> — no cards are dealt, and the ante is set again (try a lower amount). A player with fewer chips than the ante goes all-in for what they have. At 0 chips you are busted and may <b>Rebuy</b> 5000 free chips between hands. Anyone can <b>leave the match at any time</b> with the Leave button.</li>
+      <li><b>Deal:</b> 5 cards each from a single 52-card deck, dealer button rotates clockwise every hand. No community cards.</li>
+      <li><b>Draw (once per hand):</b> on your turn, tap <b>0–3 cards</b> to exchange, then confirm (0 = stand pat). Your discards go to the <b>bottom</b> of the deck and your replacements come off the <b>top</b>. Only the count is logged — never the ranks.</li>
+      <li><b>Betting (exactly one round, after all draws):</b> first to act is left of the dealer. <b>Call</b> = match the bet to stay in (when nothing has been bet yet, Call reads <b>Check</b>). <b>Raise</b> = match it plus extra (minimum raise is 10 chips or the size of the last raise, whichever is bigger). <b>All-in</b> = bet everything you have left. <b>Fold</b> = give up your hand and your chips in the pot. A player who just raised <b>can't raise again over their own raise</b> — they must wait until somebody else raises first (they can still fold, call, check, or all-in for the call amount). Betting ends when everyone left has matched the bet, or only one player remains.</li>
+      <li><b>Chips — stage, then confirm:</b> clicking a chip or dragging it (10 / 100 / 500 / 1000) only <b>stages</b> it in your bet tray — nothing leaves your stack yet. Stack as many as you like (1000 + 500 + 100 = 1600 is easy), click a staged chip to <b>take it back</b>, then press <b>✅ Bet Ready</b> to commit. The tray tells you live what the staged bet means ("Call 200", "Raise to 700", "All-in", or what's missing). The Fold / Call / Raise / All-in buttons always work too.</li>
+      <li><b>Showdown:</b> the last player to raise shows first, then clockwise. If everyone else folds, the survivor takes the pot without showing. Ties split the pot; any odd chip goes to the earliest winner clockwise from the dealer. Side pots are worked out properly when someone is all-in for less.</li>
+      <li><b>🥃 Drink Whiskey:</b> purely cosmetic, local only — it wobbles YOUR screen a little (5+ sips) or a lot (15+ sips) and never touches the game or anyone else's screen. "Sober up" clears it early.</li>
+      <li><b>Joining late?</b> If you join a game that's already in progress, you <b>spectate</b> — you see the table but every card stays hidden, and you are <b>automatically offered entry at the next hand's ante round</b> (just stay on the screen, no leaving and rejoining). If your connection drops mid-hand, you have <b>10 seconds</b> to reconnect and keep your seat; after that your seat is withdrawn and you come back as a spectator. Quit and slip back in before the 10 seconds <b>three times in a row</b> in the same room and you are <b>banned from rejoining that room</b> — a genuine dropout that stays away past 10 seconds never counts toward the three.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============ LOBBY ============ -->
+<div id="lobbyScreen" class="hidden">
+  <div class="card">
+    <h2>Lobby <span id="lobbyCode" class="roomcode" style="font-size:22px;font-weight:900;letter-spacing:.2em;color:var(--gold)"></span></h2>
+    <p id="lobbyMsg">Share the code with your friends — they type it in Join lobby.</p>
+    <div class="row"><button id="btnCopyLobby" type="button" class="ghost small">Copy code / link</button>
+    <button id="btnLeaveLobby" type="button" class="danger small">Leave lobby</button></div>
+    <div id="lobbyList" style="margin-top:12px"></div>
+    <div class="row" style="margin-top:14px">
+      <button id="btnStartGame" type="button" class="hidden">▶ Start game</button>
+      <span id="lobbyWait" style="color:var(--mut);font-size:14px">Waiting for the host to start…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div id="gameScreen" class="hidden">
+  <div class="status" id="statusBox">Waiting…<small id="statusSub"></small></div>
+  <div id="anteBox" class="hidden">
+    <h3>🎩 ANTE — fastest click sets the entry amount</h3>
+    <div class="ante-sub" id="anteStatus"></div>
+    <div class="ante-pick" id="antePropose" style="justify-content:flex-start;margin:12px 0 4px"></div>
+    <div id="anteEnter" class="row" style="margin-top:10px"></div>
+    <div id="anteDeadNote" class="hidden"></div>
+    <div id="anteWaiting"></div>
+  </div>
+  <div class="table-wrap">
+    <div class="seats" id="opponentsBox"></div>
+    <div class="center-row">
+      <div class="pot-box"><div class="pot-total" id="potTotal">🪙 0</div><div class="lbl">POT</div><div class="count" id="potSub"></div></div>
+      <div class="pile"><div class="card-big back" id="deckPile" title="Deck"><span style="font-size:26px">🂠</span><span class="pts" id="deckCount"></span></div><div class="lbl">Deck</div><div class="count" id="deckSub"></div></div>
+    </div>
+    <div id="mySeat"></div>
+    <div class="chip-rack" id="chipRack">
+      <div class="chip c10" data-chip="10" draggable="true">10</div>
+      <div class="chip c100" data-chip="100" draggable="true">100</div>
+      <div class="chip c500" data-chip="500" draggable="true">500</div>
+      <div class="chip c1000" data-chip="1000" draggable="true">1000</div>
+      <div class="pot-drop" id="potDrop">🎯 Drop chips here to stage your bet</div>
+    </div>
+    <div id="stageBox" class="hidden">
+      <div class="stage-total">Your staged bet: <span id="stageTotal">0</span> chips</div>
+      <div class="stage-effect" id="stageEffect">Stage chips to bet — click or drag chips in.</div>
+      <div id="stageChips"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button id="btnBetReady" type="button">✅ Bet Ready</button>
+        <button id="btnStageClear" type="button" class="ghost small">Clear staged chips</button>
+      </div>
+      <div style="color:var(--mut);font-size:12.5px;margin-top:6px">Nothing leaves your stack until you press Bet Ready. Click a staged chip to take it back.</div>
+    </div>
+    <div id="drawBox" class="hidden" style="text-align:center;margin-top:10px">
+      <div style="font-weight:800;margin-bottom:6px">Your draw — tap 0–3 cards to exchange, then confirm:</div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">
+        <button id="btnConfirmDraw" type="button">Confirm draw (<span id="drawCount">0</span> cards)</button>
+        <button id="btnStandPat" type="button" class="ghost">Stand pat (0)</button>
+        <span style="color:var(--mut);font-size:13px">Discards go to the bottom of the deck; replacements come off the top.</span>
+      </div>
+    </div>
+    <div id="betBox" class="hidden" style="text-align:center;margin-top:10px">
+      <div style="font-weight:800;margin-bottom:6px" id="betPrompt">Your bet</div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">
+        <button id="btnFold" type="button" class="danger">Fold</button>
+        <button id="btnCall" type="button">Call</button>
+        <button id="btnRaise" type="button">Raise</button>
+        <button id="btnAllIn" type="button" class="danger">All-in</button>
+      </div>
+      <div id="raiseBox" class="hidden" style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <span style="color:var(--mut);font-size:13px">Raise by:</span>
+        <button type="button" class="ghost small raise-quick" data-raise="10">+10</button>
+        <button type="button" class="ghost small raise-quick" data-raise="50">+50</button>
+        <button type="button" class="ghost small raise-quick" data-raise="100">+100</button>
+        <button type="button" class="ghost small raise-quick" data-raise="500">+500</button>
+        <input type="number" id="raiseCustom" placeholder="custom" min="10" style="width:110px">
+        <button id="btnRaiseConfirm" type="button" class="small">Raise to <span id="raiseToLabel"></span></button>
+        <button id="btnRaiseCancel" type="button" class="ghost small">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <p id="effectPrompt" style="margin-top:10px;font-weight:700;min-height:20px"></p>
+  <div class="row">
+    <button id="btnNextHand" type="button" class="hidden">▶ Next hand</button>
+    <button id="btnRebuy" type="button" class="ghost small hidden">💰 Rebuy 5000 chips</button>
+    <button id="btnLeaveMatch" type="button" class="danger small">🚪 Leave match</button>
+    <button id="btnMenu2" type="button" class="ghost small">← Menu</button>
+    <button id="btnRules2" type="button" class="ghost small">📖 Rules</button>
+    <button type="button" class="ghost small whiskey-sip">🥃 Drink Whiskey</button>
+    <span class="whiskey-count" style="color:var(--mut);font-size:14px">Sips: 0</span>
+    <span class="whiskey-status" style="color:var(--gold);font-size:14px;font-weight:700"></span>
+    <button type="button" class="ghost small whiskey-sober hidden">🧼 Sober up</button>
+  </div>
+  <div class="card" style="margin-top:12px;padding:14px">
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:6px">Room</h3>
+    <div id="connBox" style="font-size:13px;color:var(--mut)">Local game</div>
+    <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:14px 0 6px">Log</h3>
+    <div class="log" id="logBox">Game started.</div>
+  </div>
+</div>
+
+<footer>Five-Card Draw — Wild West Poker v1.1 — free, no accounts, no ads. Hosted on Cloudflare Pages. Code on GitHub.<br>
+Lobbies run peer-to-peer in your browser (WebRTC) — no game server, no cost, nothing to sign up for. The host holds the true game state; each player only ever sees their own cards. Free play chips only — no real money.</footer>
+</div>
+
+<div id="bannedModal" class="modal hidden"><div class="box">
+  <h2>🚫 Removed from this room</h2>
+  <p style="color:var(--mut);font-size:14px;line-height:1.6">You disconnected and slipped back in three times in a row in this room, so the host removed you for the rest of this room. A genuine dropout that stays away past 10 seconds never counts toward this — only quick quit-and-return cycles do.</p>
+  <div class="row" style="justify-content:center;margin-top:16px"><button id="btnBannedMenu" type="button">Back to menu</button></div>
+</div></div>
+
+<div id="botModal" class="modal hidden"><div class="box">
+  <h2 id="botModalTitle">How many bots?</h2><p id="botModalSub">Bots fill the remaining seats (max 6 players total).</p>
+  <div class="bot-pick" id="botPick"></div>
+  <div class="row" style="justify-content:center"><button id="botCancel" type="button" class="ghost">Cancel</button></div>
+</div></div>
+
+<div id="roomOptModal" class="modal hidden"><div class="box">
+  <h2>Lobby settings</h2>
+  <p>Who can find this lobby?</p>
+  <div class="bot-pick" id="visPick">
+    <button type="button" data-vis="private">🔒 Private</button>
+    <button type="button" data-vis="public">🌍 Public</button>
+  </div>
+  <p>Maximum players (2–6, bots included):</p>
+  <div class="bot-pick" id="maxPick"></div>
+  <p id="roomOptMsg" style="min-height:20px;color:var(--mut);font-size:14px"></p>
+  <p style="font-size:13px">Public rooms appear in “Browse public rooms” while they wait for players, and leave the list when the game starts. Private rooms are code-only.</p>
+  <div class="row" style="justify-content:center">
+    <button id="roomOptCreate" type="button">Create lobby</button>
+    <button id="roomOptCancel" type="button" class="ghost">Cancel</button>
+  </div>
+</div></div>
+
+<div id="rulesModal" class="modal hidden"><div class="box">
+  <button id="rulesCloseX" type="button" class="modal-x" aria-label="Close rules">✕</button>
+  <h2>📖 Five-Card Draw — rules &amp; hands</h2>
+  <div id="rulesBody" style="font-size:14px;line-height:1.6;color:var(--mut)"></div>
+  <div class="row" style="justify-content:center;margin-top:14px"><button id="rulesClose" type="button">Got it</button></div>
+</div></div>
+
+<div id="overModal" class="modal hidden"><div class="box">
+  <h2 id="overTitle">🏆 Winner</h2>
+  <div id="overBody"></div>
+  <div class="row" style="justify-content:center;margin-top:16px">
+    <button id="btnOverNextHand" type="button">▶ Next hand</button>
+    <button id="btnOverMenu" type="button" class="ghost">Menu</button>
+  </div>
+</div></div>
+
+<button id="shootBtn" type="button" class="hidden">🔫 Shoot'em Dead</button>
+<div class="muzzle" id="muzzle"></div>
+<script>
+"use strict";
+/* =====================================================================
+   FIVE-CARD DRAW — engine (pure JS, no DOM).
+   Tested in Node: `node test/engine.test.js` extracts this script block.
+   ===================================================================== */
+const STARTING_STACK = 5000;
+const ANTE_OPTIONS = [10, 100, 500, 1000];
+const DEFAULT_ANTE = 10;
+const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const SUITS = ['\u2660','\u2665','\u2666','\u2663'];
+const RANK_VALUE = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+const MAX_DRAW = 3;
+const HIGH_ANTE = 500;       // a "very large" entry ante (500 or 1000)
+const SHOOTOUT_BULLETS = 6;  // revolver chambers per player per episode
+const SHOOTOUT_WINDOW_MS = 2000;
+const DISCONNECT_GRACE_MS = 10000; // a disconnected seat is held this long for a reconnect
+const MAX_QUICK_RECONNECTS = 3;    // quick disconnect-reconnect cycles before a room ban
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function randomSeed(){ if (typeof crypto!=='undefined' && crypto.getRandomValues){ const a=new Uint32Array(1); crypto.getRandomValues(a); return a[0]>>>0; } return (Math.random()*4294967296)>>>0; }
+function shuffle(arr,rng){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=arr[i]; arr[i]=arr[j]; arr[j]=t; } return arr; }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function buildDeck(){
+  const deck=[];
+  for(const s of SUITS) for(const r of RANKS) deck.push({id:r+s, rank:r, suit:s});
+  return deck;
+}
+function ordinal(n){ const s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+
+/* ---- hand evaluator: standard 5-card rankings ----
+   category: 8 straight flush (Royal Flush = straight flush, ace high),
+   7 four of a kind, 6 full house, 5 flush, 4 straight, 3 three of a kind,
+   2 two pair, 1 one pair, 0 high card. tiebreak arrays compare
+   lexicographically. Wheel A-2-3-4-5 counts as a straight, high card 5. */
+function evaluateHand(cards){
+  if(!cards||cards.length!==5) return {category:-1, name:'Incomplete hand', tiebreak:[]};
+  const vals=cards.map(c=>RANK_VALUE[c.rank]).sort((a,b)=>b-a);
+  const flush=cards.every(c=>c.suit===cards[0].suit);
+  const counts={};
+  for(const v of vals) counts[v]=(counts[v]||0)+1;
+  const groups=Object.keys(counts).map(k=>({v:+k, n:counts[k]}))
+    .sort((a,b)=> b.n-a.n || b.v-a.v);
+  const uniq=[...new Set(vals)];
+  let straightHigh=0;
+  if(uniq.length===5){
+    if(uniq[0]-uniq[4]===4) straightHigh=uniq[0];
+    else if(uniq[0]===14&&uniq[1]===5&&uniq[2]===4&&uniq[3]===3&&uniq[4]===2) straightHigh=5; // wheel
+  }
+  const kickers=(g)=>g.slice(1).map(x=>x.v);
+  if(flush&&straightHigh) return {category:8, name:straightHigh===14?'Royal Flush':'Straight Flush', tiebreak:[straightHigh]};
+  if(groups[0].n===4) return {category:7, name:'Four of a Kind', tiebreak:[groups[0].v, groups[1].v]};
+  if(groups[0].n===3&&groups[1].n===2) return {category:6, name:'Full House', tiebreak:[groups[0].v, groups[1].v]};
+  if(flush) return {category:5, name:'Flush', tiebreak:vals.slice()};
+  if(straightHigh) return {category:4, name:'Straight', tiebreak:[straightHigh]};
+  if(groups[0].n===3) return {category:3, name:'Three of a Kind', tiebreak:[groups[0].v].concat(kickers(groups))};
+  if(groups[0].n===2&&groups[1].n===2) return {category:2, name:'Two Pair', tiebreak:[Math.max(groups[0].v,groups[1].v), Math.min(groups[0].v,groups[1].v), groups[2].v]};
+  if(groups[0].n===2) return {category:1, name:'One Pair', tiebreak:[groups[0].v].concat(kickers(groups))};
+  return {category:0, name:'High Card', tiebreak:vals.slice()};
+}
+function handName(cards){ return evaluateHand(cards).name; }
+function compareHands(a,b){
+  if(a.category!==b.category) return a.category-b.category;
+  const n=Math.max(a.tiebreak.length,b.tiebreak.length);
+  for(let i=0;i<n;i++){ const d=(a.tiebreak[i]||0)-(b.tiebreak[i]||0); if(d) return d; }
+  return 0;
+}
+
+/* ---- game state ---- */
+function newGame(playerNames, seed, opts){
+  opts=opts||{};
+  const names=(playerNames||[]).map(n=> (typeof n==='string'? {name:n,isBot:false,clientId:null} : {name:n.name||'Player', isBot:!!n.isBot, clientId:n.clientId||null}));
+  if(names.length<2||names.length>6) throw new Error('Five-Card Draw needs 2-6 players, got '+names.length);
+  let ante=parseInt(opts.ante,10);
+  if(ANTE_OPTIONS.indexOf(ante)<0) ante=DEFAULT_ANTE;
+  const s=(seed===undefined?randomSeed():seed)>>>0;
+  const st={ seed:s, ante, startingStack: STARTING_STACK,
+    players: names.map((n,i)=>({id:'p'+i, name:n.name, isBot:n.isBot, seat:i,
+      stack:STARTING_STACK, hand:[], bet:0, totalBet:0, folded:false, allIn:false,
+      drew:false, winStreak:0, busted:false, sitOut:false, spectator:false,
+      clientId:n.clientId||null, disconnected:false, disconnectedAt:null,
+      quickDisconnects:0})),
+    deck:[], muck:[], pot:0, dealerIdx:0, handNumber:0,
+    phase:'lobby', turnIdx:0, drawTurnIdx:0, currentBet:0, minRaise:10,
+    lastRaiseSize:0, lastRaiserId:null, pending:[], lastAggressorId:null,
+    winners:null, payouts:null, showdownOrder:null, handNames:null, overReason:'',
+    log:['Game created — ante is '+ante+' chips. First hand deals when the game starts.'],
+    shootout:{armed:false, victimId:null, shots:{}, windowEndsAt:null, deadStreak:0, deadSetterId:null},
+    anteSetterId:null, anteLocked:false, entered:{}, anteEligible:[],
+    waitingSpectators:[], bannedClientIds:[],
+    joinCount:0, version:1 };
+  return st;
+}
+function createGameState(playerNames, seed, opts){ return newGame(playerNames, seed, opts); }
+function currentPlayer(st){ return st.players[st.turnIdx]; }
+function playerById(st,id){ return st.players.find(p=>p.id===id)||null; }
+function playerIndex(st,id){ return st.players.findIndex(p=>p.id===id); }
+function activePlayers(st){ return st.players.filter(p=>!p.folded && !p.sitOut && p.hand.length===5); }
+function canAct(st,p){ return p && !p.folded && !p.sitOut && p.hand.length===5 && !p.allIn; }
+function nextIdx(st, from, pred){
+  const n=st.players.length;
+  for(let i=1;i<=n;i++){ const ix=(from+i)%n; if(pred(st.players[ix])) return ix; }
+  return -1;
+}
+
+/* ---- startHand: ante already collected from entrants, deal, draw phase.
+   Dealer rotates clockwise. Only the ante setter + players who topped up
+   the ante are dealt in; everyone else sits this hand out as a spectator
+   (keeps their chips, offered entry again at the next ante round). ---- */
+function startHand(st){
+  if(st.phase==='draw'||st.phase==='bet') return {ok:false, error:'a hand is already in progress'};
+  if(st.players.length<2) return {ok:false, error:'need at least 2 players'};
+  // A hand starting clears any dead-high-ante streak / armed shootout.
+  disarmShootout(st);
+  st.handNumber++;
+  if(st.handNumber>1) st.dealerIdx=(st.dealerIdx+1)%st.players.length;
+  const rng=mulberry32((st.seed ^ (st.handNumber*2654435761))>>>0);
+  st.deck=shuffle(buildDeck(), rng);
+  st.muck=[]; st.pot=0; st.currentBet=0; st.minRaise=10; st.lastRaiseSize=0;
+  st.lastRaiserId=null; st.lastAggressorId=null; st.pending=[];
+  st.winners=null; st.payouts=null; st.showdownOrder=null; st.handNames=null;
+  // Entrants: the ante setter + everyone who topped up. (No ante round ran
+  // — e.g. a direct startHand call — means everyone with chips plays.)
+  const entrants = st.anteSetterId ? new Set([st.anteSetterId].concat(Object.keys(st.entered||{}).filter(id=>st.entered[id]))) : null;
+  for(const p of st.players){
+    p.hand=[]; p.bet=0; p.totalBet=0; p.folded=false; p.allIn=false; p.drew=false;
+    p.sitOut = p.stack<=0 || p.disconnected || (entrants!==null && !entrants.has(p.id));
+    p.spectator = p.sitOut; // sidelined this hand: spectator until the next ante round
+    p.busted = p.stack<=0;
+    if(!p.sitOut){
+      const pay=Math.min(st.ante, p.stack);
+      p.stack-=pay; p.totalBet+=pay; st.pot+=pay;
+      if(p.stack===0) p.allIn=true; // short stack: all-in for the ante
+    }
+  }
+  const seated=st.players.filter(p=>!p.sitOut);
+  if(seated.length<2){ st.phase='over'; st.overReason='Only one player has chips left.'; st.log.push(st.overReason); return {ok:true, gameOver:true}; }
+  for(let r=0;r<5;r++) for(const p of st.players) if(!p.sitOut) p.hand.push(st.deck.pop());
+  st.phase='draw';
+  st.drawTurnIdx=nextIdx(st, st.dealerIdx, p=>!p.sitOut);
+  st.turnIdx=st.drawTurnIdx;
+  const dealer=st.players[st.dealerIdx];
+  st.log.push('Hand '+st.handNumber+' — ante '+st.ante+', dealer: '+dealer.name+'. Draw your cards (0–3 each).');
+  st.log.push('Dealt 5 cards each to '+seated.map(p=>p.name).join(', ')+'.');
+  return {ok:true};
+}
+
+/* ---- ante round: fastest propose locks, then everyone tops up or sits out.
+   Entry means paying ("topping up") the ante. Non-entrants are spectators
+   for this hand and are offered entry again at the next ante round. ---- */
+function beginAnteRound(st){
+  // Promote waiting spectators (mid-game joiners / post-10s returnees)
+  // into seats when there is room — they are offered entry this round.
+  while(st.waitingSpectators.length && st.players.length<6){
+    const w=st.waitingSpectators.shift();
+    st.players.push({id:'p'+st.players.length+'_'+Math.random().toString(36).slice(2,6),
+      name:w.name, isBot:false, seat:st.players.length,
+      stack:(typeof w.stack==='number'?w.stack:STARTING_STACK),
+      hand:[], bet:0, totalBet:0, folded:false, allIn:false, drew:false, winStreak:0,
+      busted:false, sitOut:true, spectator:true, clientId:w.clientId||null,
+      disconnected:false, disconnectedAt:null, quickDisconnects:0});
+    st.log.push(w.name+' takes a seat as a spectator — offered entry this hand.');
+  }
+  st.ante=DEFAULT_ANTE; st.anteSetterId=null; st.anteLocked=false;
+  st.entered={}; st.anteEligible=[];
+  st.phase='ante';
+  st.log.push('Ante round — first player to propose sets the entry ante (10 / 100 / 500 / 1000). Top up to enter, or sit this hand out.');
+  return {ok:true, phase:'ante'};
+}
+/* First valid propose locks the ante for this hand (fastest click wins). */
+function proposeAnte(st, playerId, amount){
+  if(!st || st.phase!=='ante') return {ok:false, error:'no ante round is open right now'};
+  if(st.anteLocked) return {ok:false, error:'the ante is already set at '+st.ante+' by '+((playerById(st, st.anteSetterId)||{}).name||'someone')};
+  const me=playerById(st,playerId);
+  if(!me) return {ok:false, error:'unknown player'};
+  if(me.disconnected) return {ok:false, error:'you are disconnected'};
+  if(me.stack<=0) return {ok:false, error:'you have no chips — rebuy first'};
+  if(ANTE_OPTIONS.indexOf(amount)<0) return {ok:false, error:'ante must be 10, 100, 500 or 1000'};
+  st.ante=amount; st.anteSetterId=playerId; st.anteLocked=true; st.entered={};
+  st.anteEligible=st.players.filter(p=>p.id!==playerId && p.stack>0 && !p.disconnected).map(p=>p.id);
+  st.log.push(me.name+' sets the ante at '+amount+' chips — top up to enter, or sit this hand out.');
+  if(!st.anteEligible.length) return resolveAnteRound(st); // nobody can enter: dead round at once
+  return {ok:true, ante:amount, setterId:playerId};
+}
+/* A player tops up (enter=true) or sits this hand out as a spectator. */
+function enterHand(st, playerId, enterBool){
+  if(!st || st.phase!=='ante') return {ok:false, error:'no ante round is open right now'};
+  if(!st.anteLocked) return {ok:false, error:'no ante has been proposed yet'};
+  const me=playerById(st,playerId);
+  if(!me) return {ok:false, error:'unknown player'};
+  if(playerId===st.anteSetterId) return {ok:false, error:'you set the ante — you are already in'};
+  if(st.anteEligible.indexOf(playerId)<0) return {ok:false, error:'you are not in this ante round (no chips, disconnected, or you joined after it was set)'};
+  if(Object.prototype.hasOwnProperty.call(st.entered, playerId)) return {ok:false, error:'you already answered for this hand'};
+  st.entered[playerId]=!!enterBool;
+  st.log.push(me.name+(enterBool?' tops up '+st.ante+' and enters.':' sits this hand out (spectator).'));
+  return resolveAnteIfComplete(st);
+}
+function resolveAnteIfComplete(st){
+  const answered=st.anteEligible.filter(id=>Object.prototype.hasOwnProperty.call(st.entered,id));
+  if(answered.length<st.anteEligible.length) return {ok:true, waitingFor: st.anteEligible.length-answered.length};
+  return resolveAnteRound(st);
+}
+function resolveAnteRound(st){
+  if(st.players.length<2){ st.phase='over'; st.overReason='Only one player remains in the room.'; return {ok:true, gameOver:true}; }
+  const entrants=st.anteEligible.filter(id=>st.entered[id]);
+  if(entrants.length>=1){
+    // A hand starts: the dead-high-ante streak is spent and any armed
+    // shootout is disarmed.
+    disarmShootout(st);
+    return startHand(st);
+  }
+  // DEAD ROUND: nobody entered.
+  const setterId=st.anteSetterId, ante=st.ante;
+  st.log.push('Dead round — nobody entered at '+ante+' chips.');
+  const so=st.shootout;
+  if(ante>=HIGH_ANTE){
+    if(so.deadSetterId===setterId) so.deadStreak++;
+    else { so.deadStreak=1; so.deadSetterId=setterId; }
+  } else {
+    // A low-ante dead round breaks the streak — and disarms an armed episode.
+    so.deadStreak=0; so.deadSetterId=null; disarmShootout(st);
+  }
+  if(so.deadStreak>=5 && so.deadSetterId){
+    so.armed=true; so.victimId=so.deadSetterId; so.shots={}; so.windowEndsAt=null;
+    st.log.push((playerById(st, so.victimId)||{}).name+' set a '+HIGH_ANTE+'+ ante five dead rounds in a row…');
+  }
+  return beginAnteRound(st);
+}
+/* Clear any armed shootout and any dead-high-ante streak. */
+function disarmShootout(st){
+  if(!st||!st.shootout) return;
+  st.shootout={armed:false, victimId:null, shots:{}, windowEndsAt:null, deadStreak:0, deadSetterId:null};
+}
+
+/* ---- side pots + showdown ---- */
+function computePayouts(st){
+  // Contribution levels (ante + bets). Each level forms a pot segment
+  // shared by every non-folded player who contributed at least that much.
+  const contributors=st.players.filter(p=>p.totalBet>0);
+  const levels=[...new Set(contributors.map(p=>p.totalBet))].sort((a,b)=>a-b);
+  const payouts={}; let prev=0;
+  const eligibleAt=(lvl)=>st.players.filter(p=>!p.folded && !p.sitOut && p.totalBet>=lvl && p.hand.length===5);
+  for(const lvl of levels){
+    const width=lvl-prev; prev=lvl;
+    const payers=contributors.filter(p=>p.totalBet>=lvl);
+    const amount=width*payers.length;
+    if(amount<=0) continue;
+    const elig=eligibleAt(lvl);
+    if(!elig.length) continue; // folded players' chips stay in — but only if nobody eligible; normally impossible
+    let best=null;
+    for(const p of elig){ const ev=evaluateHand(p.hand); if(!best||compareHands(ev,best.ev)>0) best={ev, id:p.id}; }
+    const winners=elig.filter(p=>compareHands(evaluateHand(p.hand), best.ev)===0);
+    // Ties split equally; odd chips go to the earliest winner clockwise from the dealer.
+    winners.sort((a,b)=>{
+      const da=(playerIndex(st,a.id)-st.dealerIdx+st.players.length)%st.players.length;
+      const db=(playerIndex(st,b.id)-st.dealerIdx+st.players.length)%st.players.length;
+      return da-db;
+    });
+    const share=Math.floor(amount/winners.length);
+    const odd=amount-share*winners.length;
+    winners.forEach((w,i)=>{ payouts[w.id]=(payouts[w.id]||0)+share+(i<odd?1:0); });
+  }
+  return payouts;
+}
+function endHand(st, reason, showdown){
+  st.phase='handOver';
+  st.overReason=reason||'';
+  if(showdown){
+    st.payouts=computePayouts(st);
+    // Showdown order: last aggressor first, then clockwise.
+    const order=[];
+    const start=st.lastAggressorId? playerIndex(st, st.lastAggressorId) : st.dealerIdx;
+    for(let i=0;i<st.players.length;i++){
+      const p=st.players[(start+i)%st.players.length];
+      if(!p.folded && !p.sitOut && p.hand.length===5) order.push(p.id);
+    }
+    st.showdownOrder=order;
+    st.handNames={};
+    for(const p of st.players) if(!p.folded && !p.sitOut && p.hand.length===5) st.handNames[p.id]=handName(p.hand);
+    st.winners=Object.keys(st.payouts).filter(id=>st.payouts[id]>0);
+  } else {
+    // No showdown: the payout was already set by awardToSoleSurvivor
+    // (keep it — do NOT reset it here, or the winner never gets paid).
+    if(!st.payouts) st.payouts={};
+    st.showdownOrder=[]; st.handNames={};
+    st.winners=Object.keys(st.payouts).filter(id=>st.payouts[id]>0);
+  }
+  for(const id of Object.keys(st.payouts)){
+    const p=playerById(st,id); if(p) p.stack+=st.payouts[id];
+  }
+  // Win streaks: every winner's streak grows, everyone else's resets.
+  // (Display only — win streaks have NOTHING to do with the shootout.)
+  for(const p of st.players){
+    if(st.winners.indexOf(p.id)>=0) p.winStreak++;
+    else p.winStreak=0;
+  }
+  // A player who completes a hand while connected clears their
+  // quick-disconnect count (anti-troll: only repeated quick cycles with
+  // no completed hand between them count toward the ban).
+  for(const p of st.players){ if(!p.disconnected) p.quickDisconnects=0; }
+  if(st.winners.length){
+    const winNames=st.winners.map(id=>playerById(st,id).name).join(', ');
+    const amounts=st.winners.map(id=>st.payouts[id]).join(', ');
+    st.log.push('Hand '+st.handNumber+': '+winNames+' win'+(st.winners.length>1?'':'s')+' the pot ('+amounts+' chips).'+(showdown?' Showdown: '+st.showdownOrder.map(id=>playerById(st,id).name+' ('+st.handNames[id]+')').join(', ')+'.':''));
+  }
+  st.log.push(reason||'');
+  return {ok:true, handOver:true};
+}
+function awardToSoleSurvivor(st){
+  const alive=activePlayers(st);
+  if(alive.length!==1) return false;
+  const w=alive[0];
+  st.payouts={}; st.payouts[w.id]=st.pot;
+  st.winners=[w.id];
+  endHand(st, w.name+' takes the pot — everyone else folded.', false);
+  return true;
+}
+
+/* ---- shootout (secret rule — see README "Hidden rules") ---- */
+function isShootoutArmed(st){ return !!(st && st.shootout && st.shootout.armed); }
+/* A human player (not the victim, not a bot, not a spectator) fires one
+   bullet. First shot opens a 2.0s window; shots after it close pay nothing. */
+function fireShot(st, shooterId, nowMs){
+  if(!st||!st.shootout||!st.shootout.armed) return {ok:false, error:'no shootout is armed'};
+  const victim=playerById(st, st.shootout.victimId);
+  if(!victim) return {ok:false, error:'no victim'};
+  const shooter=playerById(st, shooterId);
+  if(!shooter) return {ok:false, error:'unknown player'};
+  if(shooter.isBot) return {ok:false, error:'bots never shoot'};
+  if(shooterId===st.shootout.victimId) return {ok:false, error:'you cannot shoot yourself'};
+  const now=(nowMs===undefined?Date.now():nowMs);
+  if(st.shootout.windowEndsAt!==null && now>st.shootout.windowEndsAt) return {ok:false, error:'the shooting window has closed'};
+  const fired=st.shootout.shots[shooterId]||0;
+  if(fired>=SHOOTOUT_BULLETS) return {ok:false, error:'your revolver is empty (6 bullets)'};
+  if(st.shootout.windowEndsAt===null) st.shootout.windowEndsAt=now+SHOOTOUT_WINDOW_MS;
+  st.shootout.shots[shooterId]=fired+1;
+  st.log.push(shooter.name+' fired at '+victim.name+'! ('+(fired+1)+'/6)');
+  return {ok:true, shotsFired:fired+1, windowEndsAt:st.shootout.windowEndsAt, victimId:victim.id};
+}
+/* Host calls this when the 2s window ends. Shooters split the victim's
+   remaining stack (chips NOT in the pot) equally; remainder 1 chip each
+   to the earliest shooters clockwise from the dealer. */
+function resolveShootout(st, nowMs){
+  if(!st||!st.shootout||!st.shootout.armed) return {ok:false, error:'no shootout is armed'};
+  const victim=playerById(st, st.shootout.victimId);
+  const shooters=Object.keys(st.shootout.shots).filter(id=>playerById(st,id));
+  if(!victim){ disarmShootout(st); return {ok:false, error:'victim already gone'}; }
+  if(!shooters.length){
+    // Nobody shot: the episode fizzles and the dead-high streak is spent.
+    disarmShootout(st);
+    st.log.push('The table held its fire — '+victim.name+' keeps their seat.');
+    return {ok:true, resolved:false, reason:'no shots fired'};
+  }
+  const stack=victim.stack; // chips NOT in the pot stay in the pot; only the stack is split
+  const share=Math.floor(stack/shooters.length);
+  const odd=stack-share*shooters.length;
+  shooters.sort((a,b)=>{
+    const da=(playerIndex(st,a)-st.dealerIdx+st.players.length)%st.players.length;
+    const db=(playerIndex(st,b)-st.dealerIdx+st.players.length)%st.players.length;
+    return da-db;
+  });
+  const split={};
+  shooters.forEach((id,i)=>{ const amt=share+(i<odd?1:0); split[id]=amt; const p=playerById(st,id); if(p) p.stack+=amt; });
+  victim.stack=0;
+  st.log.push(victim.name+' was shot off the table! Their '+stack+' chips are split among '+(shooters.length===1?'the shooter':shooters.length+' shooters')+': '+shooters.map(id=>playerById(st,id).name+' +'+split[id]).join(', ')+'.');
+  const victimId=victim.id;
+  const wasTurn = st.turnIdx===playerIndex(st, victimId);
+  removePlayer(st, victimId, {silent:true});
+  disarmShootout(st);
+  return {ok:true, resolved:true, victimId, shooters, split, stack};
+}
+/* Victim left on their own before the window ended: cancel, no payout. */
+function cancelShootout(st){
+  disarmShootout(st);
+}
+
+/* ---- removePlayer: a player leaves mid-game (disconnect past the 10s
+   rejoin grace). Their hand is mucked (dead — never back in the deck),
+   their bets already in the pot STAY in the pot, the turn passes if it
+   was theirs, and the game ends if fewer than 2 players remain. ---- */
+function removePlayer(st, playerId, opts){
+  opts=opts||{};
+  if(!st || st.phase==='over') return {ok:false, error:'no game in progress'};
+  const idx=playerIndex(st,playerId);
+  if(idx<0) return {ok:false, error:'unknown player'};
+  const gone=st.players[idx];
+  if(gone.hand.length){
+    if(opts.returnCardsToDeck){
+      // Disconnect withdrawal: the hand goes back into the deck (shuffled),
+      // it is NOT mucked — the owner asked for cards-back-in-deck on a
+      // 10s withdrawal. Bets already in the pot still STAY in the pot.
+      st.deck.push.apply(st.deck, gone.hand);
+      shuffle(st.deck, mulberry32(randomSeed()));
+    } else {
+      st.muck=st.muck.concat(gone.hand); // voluntary leave: hand is mucked, dead
+    }
+  }
+  st.players.splice(idx,1);
+  if(!opts.silent) st.log.push(gone.name+' left the match — their hand was mucked, their bets stay in the pot.');
+  // If the leaver was the shootout victim, cancel the episode (no payout).
+  // If the leaver is the dead-high-ante setter, the streak dies with them.
+  if(st.shootout && st.shootout.armed && st.shootout.victimId===playerId) cancelShootout(st);
+  if(st.shootout && st.shootout.deadSetterId===playerId) disarmShootout(st);
+  if(st.shootout && st.shootout.armed && st.shootout.shots[playerId]) delete st.shootout.shots[playerId];
+  // Dealer index repair.
+  if(idx<st.dealerIdx) st.dealerIdx--;
+  else if(idx===st.dealerIdx){ if(st.dealerIdx>=st.players.length) st.dealerIdx=0; }
+  if(st.players.length<2){
+    if(st.phase==='draw'||st.phase==='bet'){
+      const alive=activePlayers(st);
+      if(alive.length===1){ st.payouts={}; st.payouts[alive[0].id]=st.pot; st.winners=[alive[0].id]; }
+    }
+    st.phase='over'; st.overReason=gone.name+' left — only one player remains.';
+    return {ok:true, removed:playerId};
+  }
+  if(st.phase==='ante'){
+    const ei=st.anteEligible.indexOf(playerId);
+    if(ei>=0) st.anteEligible.splice(ei,1);
+    if(st.anteSetterId===playerId){
+      // The setter left mid-round: the round is void — fresh proposal.
+      st.log.push(gone.name+' left during the ante round — the ante is void, propose again.');
+      beginAnteRound(st);
+      return {ok:true, removed:playerId};
+    }
+    if(st.anteLocked) resolveAnteIfComplete(st);
+    return {ok:true, removed:playerId};
+  }
+  if(st.phase==='draw'){
+    if(idx<st.drawTurnIdx) st.drawTurnIdx--;
+    else if(idx===st.drawTurnIdx){
+      if(st.drawTurnIdx>=st.players.length) st.drawTurnIdx=0;
+      st.turnIdx=st.drawTurnIdx;
+    }
+    // The seat that now sits at drawTurnIdx may already have drawn (the
+    // leaver shifted the seats) — point at the next player who has not.
+    const undrawn=st.players.filter(p=>!p.sitOut&&!p.drew);
+    if(undrawn.length===0){ startBetting(st); return {ok:true, removed:playerId}; }
+    const nx=nextIdx(st, st.drawTurnIdx-1, p=>!p.sitOut&&!p.drew);
+    if(nx>=0){ st.drawTurnIdx=nx; st.turnIdx=nx; }
+  } else if(st.phase==='bet'){
+    const pi=st.pending.indexOf(playerId);
+    if(pi>=0) st.pending.splice(pi,1);
+    if(idx<st.turnIdx) st.turnIdx--;
+    else if(idx===st.turnIdx){
+      if(st.turnIdx>=st.players.length) st.turnIdx=0;
+      if(st.pending.length===0){ finishBetting(st); return {ok:true, removed:playerId}; }
+      const nx=nextPendingIdx(st);
+      if(nx>=0) st.turnIdx=nx;
+    }
+    if(activePlayers(st).length<=1){ awardToSoleSurvivor(st); return {ok:true, removed:playerId}; }
+    if(st.pending.length===0){ finishBetting(st); return {ok:true, removed:playerId}; }
+  }
+  return {ok:true, removed:playerId};
+}
+/* A player joins mid-game: they sit as a spectator (no hand this round)
+   and are offered entry at the next ante round. Joining no longer touches
+   win streaks or the shootout — those belong to the ante phase now. */
+function addPlayer(st, name, isBot, clientId){
+  const id='p'+st.players.length+'_'+Math.random().toString(36).slice(2,6);
+  const midHand=(st.phase==='draw'||st.phase==='bet');
+  const p={id, name:name||'Player', isBot:!!isBot, seat:st.players.length,
+    stack:STARTING_STACK, hand:[], bet:0, totalBet:0, folded:false, allIn:false,
+    drew:false, winStreak:0, busted:false, sitOut:true, spectator:midHand,
+    clientId:clientId||null, disconnected:false, disconnectedAt:null,
+    quickDisconnects:0};
+  st.players.push(p);
+  st.joinCount++;
+  st.log.push(name+' joined the table'+(midHand?' as a spectator — offered entry at the next ante.':'.'));
+  return {ok:true, playerId:id};
+}
+
+/* ---- disconnect / rejoin + anti-troll (engine rules; PeerJS wiring is
+   the UI pass's job — it calls these helpers on conn close / rejoin) ----
+   Seat held 10s for a reconnect with the same clientId. Back in time =
+   resume the seat. Back late = plain withdrawal (cards back in the deck,
+   seat lost) and a return as a spectator. Three quick disconnect-reconnect
+   cycles in a row in the same room = banned from that room for its life. */
+function markDisconnected(st, playerId, nowMs){
+  const p=playerById(st,playerId);
+  if(!p) return {ok:false, error:'unknown player'};
+  if(p.disconnected) return {ok:false, error:'already marked disconnected'};
+  p.disconnected=true; p.disconnectedAt=(nowMs===undefined?Date.now():nowMs);
+  st.log.push(p.name+' disconnected — seat held for 10s.');
+  return {ok:true};
+}
+function banClient(st, clientId){
+  if(!clientId) return {ok:false, error:'no client id'};
+  if(!st.bannedClientIds) st.bannedClientIds=[];
+  if(st.bannedClientIds.indexOf(clientId)<0) st.bannedClientIds.push(clientId);
+  st.log.push('A client was banned from this room (3 quick disconnects).');
+  return {ok:true};
+}
+function isBanned(st, clientId){
+  return !!(st.bannedClientIds && clientId && st.bannedClientIds.indexOf(clientId)>=0);
+}
+/* Host calls this after the 10s grace expires (or tests call it directly).
+   Plain withdrawal — NOT a quick rejoin, so it never counts toward a ban.
+   The player's stack is kept so they can come back as a spectator. */
+function withdrawDisconnected(st, playerId, nowMs){
+  const p=playerById(st,playerId);
+  if(!p) return {ok:false, error:'unknown player'};
+  if(!p.disconnected) return {ok:false, error:'player is not disconnected'};
+  const now=(nowMs===undefined?Date.now():nowMs);
+  if(p.disconnectedAt===null || now-p.disconnectedAt<DISCONNECT_GRACE_MS) return {ok:false, error:'still inside the 10s grace period'};
+  st.waitingSpectators.push({clientId:p.clientId, name:p.name, stack:p.stack});
+  const r=removePlayer(st, playerId, {silent:true, returnCardsToDeck:true});
+  if(r.ok) st.log.push(p.name+' did not come back in 10s — seat withdrawn, cards back in the deck. They may return as a spectator.');
+  return r;
+}
+/* A client comes back: same clientId, same room. Returns what happened so
+   the UI can show the right screen (resumed seat / spectator / banned). */
+function reconnectClient(st, clientId, name, nowMs){
+  const now=(nowMs===undefined?Date.now():nowMs);
+  if(!clientId) return {ok:false, error:'no client id'};
+  if(isBanned(st, clientId)) return {ok:false, error:'banned from this room (3 quick disconnects)', banned:true};
+  const p=st.players.find(q=>q.clientId===clientId);
+  if(p){
+    if(!p.disconnected) return {ok:false, error:'seat is already live'};
+    if(now-p.disconnectedAt<=DISCONNECT_GRACE_MS){
+      // Quick rejoin.
+      p.quickDisconnects++;
+      if(p.quickDisconnects>=MAX_QUICK_RECONNECTS){
+        banClient(st, clientId);
+        removePlayer(st, p.id, {silent:true, returnCardsToDeck:true});
+        st.log.push(p.name+' reconnected too many times in a row — banned from this room.');
+        return {ok:false, error:'banned from this room (3 quick disconnects)', banned:true};
+      }
+      p.disconnected=false; p.disconnectedAt=null;
+      st.log.push(p.name+' reconnected in time — seat resumed.');
+      return {ok:true, resumed:true, playerId:p.id, quickDisconnects:p.quickDisconnects};
+    }
+    // Grace expired but the host timer has not withdrawn them yet: treat
+    // as a plain withdrawal, then a spectator return.
+    const w=withdrawDisconnected(st, p.id, now);
+    if(!w.ok) return w;
+    return reconnectClient(st, clientId, name, now);
+  }
+  // No live seat: a waiting spectator returns, or a fresh spectator joins.
+  const w=(st.waitingSpectators||[]).find(x=>x.clientId===clientId);
+  if(w){
+    if(st.players.length<6){
+      st.waitingSpectators.splice(st.waitingSpectators.indexOf(w),1);
+      const np={id:'p'+st.players.length+'_'+Math.random().toString(36).slice(2,6), name:w.name, isBot:false, seat:st.players.length, stack:w.stack, hand:[], bet:0, totalBet:0, folded:false, allIn:false, drew:false, winStreak:0, busted:w.stack<=0, sitOut:true, spectator:true, clientId:clientId, disconnected:false, disconnectedAt:null, quickDisconnects:0};
+      st.players.push(np);
+      st.log.push(w.name+' is back as a spectator — offered entry at the next ante.');
+      return {ok:true, resumed:false, spectator:true, playerId:np.id};
+    }
+    return {ok:true, resumed:false, spectator:true, waiting:true};
+  }
+  return {ok:false, error:'no seat or spectator place for this client'};
+}
+
+/* ---- betting ---- */
+function clockwiseFrom(st, fromIdx, ids){
+  // Sort player ids by clockwise distance from a seat index (distance 0
+  // excluded — the reference seat itself is never in the list).
+  const n=st.players.length;
+  return ids.slice().sort((a,b)=>{
+    const da=(playerIndex(st,a)-fromIdx+n)%n;
+    const db=(playerIndex(st,b)-fromIdx+n)%n;
+    return da-db;
+  });
+}
+function nextPendingIdx(st){
+  // Next player to act: first pending player clockwise after the current turn.
+  if(!st.pending.length) return -1;
+  const ordered=clockwiseFrom(st, st.turnIdx, st.pending);
+  return playerIndex(st, ordered[0]);
+}
+function startBetting(st){
+  st.phase='bet';
+  st.currentBet=0; st.minRaise=10; st.lastRaiseSize=0; st.lastRaiserId=null;
+  st.pending=clockwiseFrom(st, st.dealerIdx, st.players.filter(p=>canAct(st,p)).map(p=>p.id));
+  if(!st.pending.length){
+    // Everyone is all-in from the ante: straight to showdown.
+    finishBetting(st); return;
+  }
+  st.turnIdx=nextIdx(st, st.dealerIdx, p=>st.pending.indexOf(p.id)>=0);
+  st.log.push('Draws are done — betting opens, '+currentPlayer(st).name+' to act first.');
+}
+function finishBetting(st){
+  if(activePlayers(st).length<=1){ awardToSoleSurvivor(st); return; }
+  endHand(st, 'Showdown — best hand takes the pot.', true);
+}
+function advanceBetTurn(st){
+  if(!st.pending.length){ finishBetting(st); return; }
+  const ix=nextPendingIdx(st);
+  if(ix>=0) st.turnIdx=ix;
+}
+
+/* ---- applyBetTotal: THE canonical bet path (Call / Raise / All-in).
+   Both the classic 'bet' action (absolute total this round) and the staged
+   'betChips' action (additional chips on top of what you already bet)
+   run through here, so the rules can never drift apart. Validation only —
+   it never silently auto-adjusts: a bad staged amount is rejected with a
+   clear reason and the stack is untouched, so the UI can show the reason
+   and let the player fix the staged amount. ---- */
+function applyBetTotal(st, me, playerId, newTotal, via, stagedAmount){
+  const amount=newTotal;
+  if(typeof amount!=='number'||isNaN(amount)) return {ok:false, error:'no bet amount'};
+  if(amount<me.bet) return {ok:false, error:'you cannot lower your bet'};
+  if(amount>me.bet+me.stack) return {ok:false, error:'not enough chips'};
+  const toCall=st.currentBet-me.bet;
+  const isAllIn=(amount===me.bet+me.stack);
+  if(amount<st.currentBet && !isAllIn){
+    if(via==='betChips') return {ok:false, error:'staged bet of '+stagedAmount+' does not cover the call of '+st.currentBet+' (you need at least '+(st.currentBet-me.bet)+' on top of your '+me.bet+')'};
+    return {ok:false, error:'you must at least call '+st.currentBet+' (or go all-in for less)'};
+  }
+  if(amount>st.currentBet){
+    if(playerId===st.lastRaiserId) return {ok:false, error:'you just raised — you cannot raise again over your own raise until somebody else raises first'};
+    const extra=amount-st.currentBet;
+    if(extra<st.minRaise && !isAllIn){
+      if(via==='betChips') return {ok:false, error:'staged raise of '+extra+' is below the minimum raise of '+st.minRaise+' — add more chips, or stage exactly the call of '+st.currentBet};
+      return {ok:false, error:'minimum raise is '+st.minRaise+' chips'};
+    }
+  }
+  const pay=amount-me.bet;
+  me.stack-=pay; me.bet=amount; me.totalBet+=pay; st.pot+=pay;
+  if(me.stack===0) me.allIn=true;
+  const wasRaise=amount>st.currentBet;
+  if(wasRaise){
+    const extra=amount-st.currentBet;
+    st.currentBet=amount; st.lastRaiserId=playerId; st.lastAggressorId=playerId;
+    if(extra>=st.minRaise){ st.lastRaiseSize=extra; st.minRaise=Math.max(10,extra); }
+    st.pending=clockwiseFrom(st, playerIndex(st,playerId), st.players.filter(p=>canAct(st,p)&&p.id!==playerId).map(p=>p.id));
+    st.log.push(me.name+(isAllIn?' goes ALL-IN for ':' raises to ')+amount+' chips.');
+  } else {
+    const pi=st.pending.indexOf(playerId); if(pi>=0) st.pending.splice(pi,1);
+    st.log.push(me.name+(toCall===0?' checks.':' calls '+st.currentBet+' chips.')+(isAllIn?' (all-in)':''));
+  }
+  if(activePlayers(st).length<=1){ awardToSoleSurvivor(st); return {ok:true, bet:amount, handOver:true, via:via}; }
+  if(!st.pending.length){ finishBetting(st); return {ok:true, bet:amount, handOver:true, via:via}; }
+  advanceBetTurn(st);
+  return {ok:true, bet:amount, raised:wasRaise, via:via};
+}
+
+/* ---- applyAction: the single choke point. UI + network both go here. ---- */
+function applyAction(st, playerId, action){
+  if(!st || !action || typeof action.type!=='string') return {ok:false, error:'bad action'};
+  if(st.phase==='over') return {ok:false, error:'game is over'};
+  const me=playerById(st,playerId);
+  if(!me) return {ok:false, error:'unknown player'};
+  const type=action.type;
+
+  /* The secret rule rides alongside normal play: any human at the table
+     may fire while it is armed (never the victim, never bots). */
+  if(type==='shoot') return fireShot(st, playerId, action.nowMs);
+
+  /* Leaving the match at any time: voluntary — hand mucked, bets stay. */
+  if(type==='leave') return removePlayer(st, playerId);
+
+  /* Ante round: first propose locks, then top up / sit out. */
+  if(type==='proposeAnte') return proposeAnte(st, playerId, action.amount);
+  if(type==='enterHand') return enterHand(st, playerId, action.enter);
+
+  if(type==='rebuy'){
+    if(st.phase!=='handOver'&&st.phase!=='lobby'&&st.phase!=='ante') return {ok:false, error:'you can only rebuy between hands'};
+    if(me.stack>0) return {ok:false, error:'you still have chips — no rebuy needed'};
+    me.stack=STARTING_STACK; me.busted=false; me.sitOut=false;
+    st.log.push(me.name+' rebought '+STARTING_STACK+' free chips.');
+    return {ok:true, stack:me.stack};
+  }
+  if(type==='nextHand'){
+    if(st.phase!=='handOver') return {ok:false, error:'the hand is not over yet'};
+    return beginAnteRound(st);
+  }
+  if(type==='startHand'){
+    if(st.phase!=='lobby') return {ok:false, error:'the game already started'};
+    return beginAnteRound(st);
+  }
+
+  if(st.phase==='draw'){
+    if(type!=='draw') return {ok:false, error:'draw phase — exchange 0–3 cards first'};
+    if(playerId!==st.players[st.drawTurnIdx].id) return {ok:false, error:'not your draw turn'};
+    if(me.drew) return {ok:false, error:'you already drew this hand'};
+    const slots=action.slots||[];
+    if(!Array.isArray(slots)||slots.length>MAX_DRAW) return {ok:false, error:'exchange at most 3 cards'};
+    const uniq=[...new Set(slots)];
+    if(uniq.length!==slots.length) return {ok:false, error:'duplicate card in the draw'};
+    for(const s of uniq){ if(typeof s!=='number'||s<0||s>=me.hand.length) return {ok:false, error:'no card in that slot'}; }
+    // Discards go to the BOTTOM of the deck (owner's rule), replacements
+    // come off the TOP. Only the count is logged — never the ranks.
+    const discarded=uniq.sort((a,b)=>b-a).map(i=>me.hand[i]);
+    for(const i of uniq.sort((a,b)=>b-a)) me.hand.splice(i,1);
+    st.deck=discarded.concat(st.deck); // bottom of the deck = front (we pop from the end)
+    const drawn=[];
+    for(let k=0;k<discarded.length;k++){ const c=st.deck.pop(); me.hand.push(c); drawn.push(c); }
+    me.drew=true;
+    st.log.push(me.name+' discarded '+discarded.length+' card'+(discarded.length===1?'':'s')+' and drew '+drawn.length+'.');
+    const next=nextIdx(st, st.drawTurnIdx, p=>!p.sitOut&&!p.drew);
+    if(next<0){ startBetting(st); return {ok:true, discarded:discarded.length, drawn:clone(drawn), betting:true}; }
+    st.drawTurnIdx=next; st.turnIdx=next;
+    return {ok:true, discarded:discarded.length, drawn:clone(drawn)};
+  }
+
+  if(st.phase==='bet'){
+    if(playerId!==currentPlayer(st).id) return {ok:false, error:'not your turn'};
+    if(!canAct(st,me)) return {ok:false, error:'you cannot act (folded or all-in)'};
+    if(type==='fold'){
+      me.folded=true;
+      const pi=st.pending.indexOf(playerId); if(pi>=0) st.pending.splice(pi,1);
+      st.log.push(me.name+' folds.');
+      if(activePlayers(st).length<=1){ awardToSoleSurvivor(st); return {ok:true, folded:true, handOver:true}; }
+      if(!st.pending.length){ finishBetting(st); return {ok:true, folded:true, handOver:true}; }
+      advanceBetTurn(st);
+      return {ok:true, folded:true};
+    }
+    if(type==='bet'){
+      return applyBetTotal(st, me, playerId, action.amount, 'bet', null);
+    }
+    if(type==='betChips'){
+      // Staged chips: amount is ADDITIONAL chips on top of what this
+      // player has already bet this round. Staging itself is UI-local
+      // (nothing is committed until this action runs), so a
+      // staged-then-cancelled bet leaves the stack untouched — trivially,
+      // because no engine call was made.
+      const amount=action.amount;
+      if(typeof amount!=='number'||isNaN(amount)) return {ok:false, error:'no staged amount'};
+      if(amount<=0) return {ok:false, error:'staged amount must be more than 0'};
+      return applyBetTotal(st, me, playerId, me.bet+amount, 'betChips', amount);
+    }
+    return {ok:false, error:'betting phase — fold, call, raise or all-in'};
+  }
+  if(st.phase==='handOver'){
+    return {ok:false, error:'hand is over — start the next hand'};
+  }
+  return {ok:false, error:'not a valid action right now'};
+}
+
+/* ---- legalActions: what a player may do right now (UI + tests) ---- */
+function legalActions(st, playerId){
+  const out=[];
+  if(!st||st.phase==='over') return out;
+  const me=playerById(st,playerId); if(!me) return out;
+  out.push({type:'leave'}); // leaving the match is always allowed
+  if(st.phase==='ante'){
+    if(!st.anteLocked){ for(const a of ANTE_OPTIONS) out.push({type:'proposeAnte', amount:a}); }
+    else if(st.anteEligible.indexOf(playerId)>=0 && !Object.prototype.hasOwnProperty.call(st.entered, playerId)){
+      out.push({type:'enterHand', enter:true});
+      out.push({type:'enterHand', enter:false});
+    }
+    if(me.stack===0) out.push({type:'rebuy'});
+    return out;
+  }
+  if(st.phase==='draw'&&st.players[st.drawTurnIdx]&&st.players[st.drawTurnIdx].id===playerId){
+    out.push({type:'draw', slots:[]});
+    return out;
+  }
+  if(st.phase==='bet'&&currentPlayer(st).id===playerId&&canAct(st,me)){
+    out.push({type:'fold'});
+    const toCall=st.currentBet-me.bet;
+    out.push({type:'bet', amount:st.currentBet}); // call (or check when toCall is 0)
+    if(playerId!==st.lastRaiserId){
+      const minRaiseTo=st.currentBet+st.minRaise;
+      if(minRaiseTo<=me.bet+me.stack) out.push({type:'bet', amount:minRaiseTo});
+    }
+    out.push({type:'bet', amount:me.bet+me.stack}); // all-in
+    return out;
+  }
+  if(st.phase==='handOver'&&me.stack===0) out.push({type:'rebuy'});
+  return out;
+}
+
+/* ---- filteredView: per-client view. NEVER leaks hidden card values. ----
+   A player sees only their own hand. Opponents' cards are backs with
+   opaque ids (a card's true id IS its rank+suit, so an unseen card must
+   never carry its real id). The deck is count-only. Folded hands stay
+   mucked and are never revealed. At showdown (handOver) every active
+   player's hand is revealed with its hand name. The shootout flag is
+   per-viewer: only other HUMAN players see the button state. */
+function filteredView(st, viewerId){
+  const viewer=playerById(st,viewerId);
+  const over=st.phase==='handOver'||st.phase==='over';
+  const players=st.players.map(p=>{
+    const isViewer=viewer&&viewer.id===p.id;
+    const reveal=over&&!p.folded&&!p.sitOut&&p.hand.length===5;
+    return {
+      id:p.id, name:p.name, isBot:p.isBot, seat:p.seat,
+      stack:p.stack, bet:p.bet, totalBet:p.totalBet, folded:p.folded,
+      allIn:p.allIn, winStreak:p.winStreak, busted:p.busted, sitOut:p.sitOut,
+      spectator:!!p.spectator, disconnected:!!p.disconnected,
+      cardCount:p.hand.length,
+      handName: reveal? handName(p.hand) : null,
+      cards:p.hand.map((c,ci)=>{
+        if(isViewer||reveal) return {id:c.id, rank:c.rank, suit:c.suit};
+        return {id:'hidden-'+p.id+'-'+ci, rank:null, suit:null};
+      })
+    };
+  });
+  const so=st.shootout||{armed:false};
+  const canShoot=!!(so.armed && viewer && !viewer.isBot && viewer.id!==so.victimId);
+  return {
+    seed:st.seed, ante:st.ante, phase:st.phase, handNumber:st.handNumber,
+    turnIdx:st.turnIdx, drawTurnIdx:st.drawTurnIdx,
+    turnPlayerId: st.players[st.turnIdx]? st.players[st.turnIdx].id : null,
+    drawPlayerId: st.players[st.drawTurnIdx]? st.players[st.drawTurnIdx].id : null,
+    dealerId: st.players[st.dealerIdx]? st.players[st.dealerIdx].id : null,
+    players, deckCount:st.deck.length, pot:st.pot,
+    currentBet:st.currentBet, minRaise:st.minRaise, lastRaiserId:st.lastRaiserId,
+    anteLocked:!!st.anteLocked, anteSetterId:st.anteSetterId||null,
+    entered:clone(st.entered||{}), anteEligible:(st.anteEligible||[]).slice(),
+    waitingSpectators:(st.waitingSpectators||[]).map(w=>w.name),
+    pending:st.pending.slice(),
+    winners:st.winners, payouts:st.payouts, showdownOrder:st.showdownOrder,
+    handNames:st.handNames, overReason:st.overReason,
+    shootout:{ armed:!!so.armed, victimId:so.victimId||null,
+      victimName: so.victimId? (playerById(st,so.victimId)||{}).name||null : null,
+      canShoot, shotsFired: viewer? (so.shots[viewer.id]||0) : 0,
+      shots: clone(so.shots||{}), windowEndsAt: so.windowEndsAt||null },
+    log:st.log.slice(-40), version:st.version
+  };
+}
+function stateFingerprint(st){
+  const s=JSON.stringify([st.phase, st.handNumber, st.turnIdx, st.deck.length, st.pot, st.currentBet, st.ante, st.shootout.deadStreak,
+    st.players.map(p=>[p.id,p.stack,p.bet,p.folded,p.allIn,p.hand.map(c=>c.id),p.winStreak]), st.winners, st.shootout.armed]);
+  let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h;
+}
+function serializeState(st){ return clone(st); }
+function deserializeState(s){ return clone(s); }
+
+/* ---- bots ----
+   A bot only ever uses its OWN hand (it never reads an unseen card's
+   value from the full state — it has no `known` map because in draw
+   poker every card it holds is its own). Draw: keep pairs/trips/quads,
+   keep 4-flush / 4-straight draws, else keep the two highest cards.
+   Betting (cautious-human style): prefer min-raises and small raises —
+   a bot raise is never a huge overbet (capped at the min raise, or twice
+   it up to 100 with four of a kind or better). All-in ONLY with four of
+   a kind or better, or trips+ when short-stacked (stack <= 500). Weak
+   one-pair hands fold to large raises; medium hands call more than raise.
+   Bots never shoot and never drink (whiskey is human-local anyway). */
+function botProposeAnte(st, playerId){ return 10; } // bots propose the small ante when nobody has
+function botEnterHand(ante, botStack){ return ante<=100; } // enter cheap antes, decline 500+
+function botDrawSlots(st, playerId){
+  const me=playerById(st,playerId); if(!me) return [];
+  const hand=me.hand;
+  const counts={};
+  hand.forEach((c,i)=>{ counts[c.rank]=(counts[c.rank]||[]).concat(i); });
+  const keep=new Set();
+  for(const r of Object.keys(counts)) if(counts[r].length>=2) counts[r].forEach(i=>keep.add(i));
+  if(keep.size===0){
+    // 4-flush? keep the 4 suited cards.
+    const bySuit={};
+    hand.forEach((c,i)=>{ bySuit[c.suit]=(bySuit[c.suit]||[]).concat(i); });
+    for(const s of Object.keys(bySuit)) if(bySuit[s].length===4) bySuit[s].forEach(i=>keep.add(i));
+  }
+  if(keep.size===0){
+    // 4-straight? keep the 4 that form a run (incl. wheel A-2-3-4).
+    const vals=hand.map((c,i)=>({v:RANK_VALUE[c.rank], i})).sort((a,b)=>b.v-a.v);
+    const uniq=[...new Map(vals.map(x=>[x.v,x])).values()];
+    const seqs=[[14,5,4,3],[14,13,12,11],[13,12,11,10],[12,11,10,9],[11,10,9,8],[10,9,8,7],[9,8,7,6],[8,7,6,5],[7,6,5,4],[6,5,4,3],[5,4,3,2]];
+    for(const seq of seqs){
+      const hit=seq.map(v=>uniq.find(u=>u.v===v)).filter(Boolean);
+      if(hit.length===4){ hit.forEach(u=>keep.add(u.i)); break; }
+    }
+  }
+  if(keep.size===0){
+    // No pair, no draw: keep the two highest cards, discard three.
+    const sorted=hand.map((c,i)=>({v:RANK_VALUE[c.rank], i})).sort((a,b)=>b.v-a.v);
+    keep.add(sorted[0].i); keep.add(sorted[1].i);
+  }
+  const discard=[];
+  for(let i=0;i<5;i++) if(!keep.has(i)) discard.push(i);
+  return discard.slice(0,3);
+}
+function botChooseAction(st, playerId, rnd){
+  rnd=rnd||Math.random;
+  if(!st||st.phase==='over') return null;
+  const me=playerById(st,playerId); if(!me) return null;
+  if(st.phase==='ante'){
+    if(!st.anteLocked) return {type:'proposeAnte', amount:botProposeAnte(st, playerId)};
+    if(st.anteEligible.indexOf(playerId)>=0 && !Object.prototype.hasOwnProperty.call(st.entered, playerId))
+      return {type:'enterHand', enter:botEnterHand(st.ante, me.stack)};
+    return null;
+  }
+  if(st.phase==='draw'){
+    if(!st.players[st.drawTurnIdx]||st.players[st.drawTurnIdx].id!==playerId) return null;
+    return {type:'draw', slots:botDrawSlots(st, playerId)};
+  }
+  if(st.phase!=='bet') return null;
+  if(currentPlayer(st).id!==playerId||!canAct(st,me)) return null;
+  const ev=evaluateHand(me.hand);
+  const cat=ev.category;
+  const toCall=st.currentBet-me.bet;
+  const maxBet=me.bet+me.stack;
+  const r=rnd();
+  const canRaise=playerId!==st.lastRaiserId;
+  // Capped raises: the min raise, or twice it (max 100 extra) with quads+.
+  const raiseExtra = cat>=7 ? Math.min(st.minRaise*2, 100) : st.minRaise;
+  const raiseTo=Math.min(st.currentBet+raiseExtra, maxBet);
+  const raiseOk=canRaise&&raiseTo>st.currentBet;
+  const shortStacked=me.stack<=500;
+  // Calling would cost the whole stack: that IS an all-in, so it follows
+  // the all-in rule (quads+, or trips+ when short-stacked) — else fold.
+  if(toCall>=me.stack){
+    if(cat>=7) return {type:'bet', amount:maxBet};
+    if(cat>=3 && shortStacked) return {type:'bet', amount:maxBet};
+    return {type:'fold'};
+  }
+  if(toCall===0){
+    if(cat>=6&&raiseOk&&r<0.4) return {type:'bet', amount:raiseTo};
+    if(cat>=3&&raiseOk&&r<0.2) return {type:'bet', amount:raiseTo};
+    return {type:'bet', amount:st.currentBet}; // check
+  }
+  const callCostly=toCall>me.stack*0.25;
+  if(cat>=7){ if(raiseOk&&r<0.5) return {type:'bet', amount:raiseTo}; if(raiseOk&&r<0.75) return {type:'bet', amount:maxBet}; return {type:'bet', amount:st.currentBet}; }
+  if(cat===6){ if(raiseOk&&r<0.4) return {type:'bet', amount:raiseTo}; return {type:'bet', amount:st.currentBet}; }
+  if(cat===5){ if(raiseOk&&r<0.25) return {type:'bet', amount:raiseTo}; if(r<0.9) return {type:'bet', amount:st.currentBet}; return {type:'fold'}; }
+  if(cat===4){ if(raiseOk&&r<0.15) return {type:'bet', amount:raiseTo}; if(r<0.85||!callCostly) return {type:'bet', amount:st.currentBet}; return {type:'fold'}; }
+  if(cat===3){ if(raiseOk&&r<0.1) return {type:'bet', amount:raiseTo}; if(r<0.75||!callCostly) return {type:'bet', amount:st.currentBet}; return {type:'fold'}; }
+  if(cat===2){ if(r<0.6||!callCostly) return {type:'bet', amount:st.currentBet}; return {type:'fold'}; }
+  if(cat===1){ if(toCall>me.stack*0.15) return {type:'fold'}; if(r<0.35) return {type:'bet', amount:st.currentBet}; return {type:'fold'}; }
+  if(!callCostly&&r<0.15) return {type:'bet', amount:st.currentBet};
+  return {type:'fold'};
+}
+
+/* ---- public rooms directory ($0, PeerJS-only, no server, no database) ----
+   Same pattern as Wellington: a public-room host claims one directory
+   slot (first free of 1..10) and answers list queries with its room info.
+   A browser asks every slot and shows the rooms that answer; a slot with
+   no answer is skipped. No automatic matchmaking: joining is always the
+   user's manual tap. The host unregisters when the game starts or the
+   room closes, so the list only shows lobbies still waiting. */
+const DIRECTORY_SLOTS = 10;
+function directoryPeerId(n){ return 'poker-directory-v1-'+n; }
+function createRoomInfo(o){
+  o=o||{};
+  let maxPlayers=parseInt(o.maxPlayers,10);
+  if(isNaN(maxPlayers)) maxPlayers=6;
+  maxPlayers=Math.max(2,Math.min(6,maxPlayers));
+  let players=parseInt(o.players,10); if(isNaN(players)||players<0) players=0;
+  let bots=parseInt(o.bots,10); if(isNaN(bots)||bots<0) bots=0;
+  if(players>maxPlayers) players=maxPlayers;
+  if(bots>players) bots=players;
+  let ante=parseInt(o.ante,10); if(ANTE_OPTIONS.indexOf(ante)<0) ante=DEFAULT_ANTE;
+  return {
+    code:String(o.code||'').trim().toUpperCase(),
+    hostName:String(o.hostName||'Host').slice(0,20),
+    players:players, maxPlayers:maxPlayers, bots:bots, ante:ante,
+    bannedClientIds: Array.isArray(o.bannedClientIds)? o.bannedClientIds.slice() : [],
+    status:(o.status==='playing'?'playing':'waiting')
+  };
+}
+function canJoinRoom(roomInfo, currentCount, clientId){
+  if(!roomInfo||!roomInfo.code) return {ok:false, error:'unknown room'};
+  if(clientId && roomInfo.bannedClientIds && roomInfo.bannedClientIds.indexOf(clientId)>=0) return {ok:false, error:'banned from this room (3 quick disconnects)'};
+  if(roomInfo.status!=='waiting') return {ok:false, error:'that game already started'};
+  if(currentCount>=roomInfo.maxPlayers) return {ok:false, error:'room is full ('+roomInfo.players+'/'+roomInfo.maxPlayers+' players, bots included)'};
+  return {ok:true};
+}
+if(typeof module!=='undefined'&&module.exports){ module.exports={STARTING_STACK,ANTE_OPTIONS,DEFAULT_ANTE,HIGH_ANTE,RANKS,SUITS,RANK_VALUE,MAX_DRAW,SHOOTOUT_BULLETS,SHOOTOUT_WINDOW_MS,DISCONNECT_GRACE_MS,MAX_QUICK_RECONNECTS,mulberry32,randomSeed,shuffle,buildDeck,ordinal,evaluateHand,handName,compareHands,newGame,createGameState,currentPlayer,playerById,startHand,beginAnteRound,proposeAnte,enterHand,computePayouts,applyAction,applyBetTotal,legalActions,filteredView,stateFingerprint,serializeState,deserializeState,removePlayer,addPlayer,fireShot,resolveShootout,cancelShootout,disarmShootout,isShootoutArmed,markDisconnected,reconnectClient,withdrawDisconnected,banClient,isBanned,botDrawSlots,botChooseAction,botProposeAnte,botEnterHand,DIRECTORY_SLOTS,directoryPeerId,createRoomInfo,canJoinRoom}; }
+</script>
+<script>
+"use strict";
+/* ================= UI + multiplayer (PeerJS, host-authoritative) ================= */
+let view=null;            // filtered view of the game (what THIS player may see)
+let fullState=null;       // host / local only: the true state
+let myId=null;
+let myName='Player';
+let playMode='local';     // local | online
+let isHost=false, roomCode=null;
+let peer=null, conns={}, clients={};
+let conn=null;
+let lobbyPlayers=[];      // {id,name,isBot} in lobby (host view)
+let spectators={};
+let disconnectedByClient={};
+let isSpectator=false;
+let myClientId=null;
+function getClientId(){
+  if(myClientId) return myClientId;
+  try{
+    myClientId=localStorage.getItem('fivecard-client-id');
+    if(!myClientId){ myClientId='w'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); localStorage.setItem('fivecard-client-id', myClientId); }
+  }catch(e){ myClientId='w'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+  return myClientId;
+}
+let lobbyBots=0;
+let roomVisibility='private';
+let roomMaxPlayers=6;
+let pendingLobbyBots=0;
+let dirPeer=null, dirSlot=0;
+let lastAckedN=-1, resendTimer=null, heartbeatTimer=null, helloTimer=null, stateReceived=false;
+let botTimer=null, gameId=0, shootoutTimer=null;
+let lastShotFx=null, playedShotFxAt=0;
+let drawSelected=new Set();
+let staged=[];            // chips staged for the next bet (UI-LOCAL — nothing is committed until Bet Ready)
+let stagedBaseBet=0;      // my bet when staging started; a change means the staged bet landed
+let lastDealtHand=0;      // hand number the deal animation already played for
+let seenLogCount=0;       // log lines the draw animation already played for
+let roomBanned=[];        // clientIds banned from this room for its lifetime (3 quick disconnects)
+let raiseExtra=50;
+const $=id=>document.getElementById(id);
+function show(id,on){ $(id).classList.toggle('hidden',!on); }
+function setMenuMsg(t){ $('menuMsg').textContent=t||''; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function toast(msg){ $('effectPrompt').textContent=msg||''; }
+
+/* ---- Bot pacing (ONE editable const) ---- */
+const BOT_PACE = { thinkMin: 1400, thinkMax: 2000, afterDrawMin: 1100, afterDrawMax: 1400 };
+function pace(a,b){ return a+Math.random()*(b-a); }
+/* ---- Round table layout (landscape / desktop) ---- */
+function layoutModeFor(width, height){ return (width>=700 && width>height) ? 'round' : 'stacked'; }
+function seatPositionsFor(n, cx, cy, rx, ry){
+  const out=[];
+  for(let i=0;i<n;i++){ const a=(Math.PI/2)+(i/n)*Math.PI*2; out.push({x:cx+rx*Math.cos(a), y:cy+ry*Math.sin(a)}); }
+  return out;
+}
+function applyLayoutMode(){
+  const round=(typeof window!=='undefined'&&window.matchMedia)
+    ? matchMedia('(orientation: landscape) and (min-width: 700px)').matches : false;
+  document.body.classList.toggle('round-table', !!round);
+  return round ? 'round' : 'stacked';
+}
+function positionRoundSeats(){
+  if(!view) return;
+  const round=document.body.classList.contains('round-table');
+  const seats=document.querySelectorAll('.table-wrap .seat');
+  if(!round){ seats.forEach(el=>{ el.style.left=''; el.style.top=''; el.style.transform=''; }); return; }
+  const n=view.players.length;
+  const mySeat=(view.players.find(p=>p.id===myId)||{}).seat||0;
+  const spots=seatPositionsFor(n, 50, 50, 36, 38);
+  view.players.forEach(p=>{
+    const rel=((p.seat-mySeat)%n+n)%n;
+    const pos=spots[rel];
+    let el=null;
+    if(p.id===myId){ const ms=$('mySeat'); el=ms?ms.querySelector('.seat'):null; }
+    else { const wrap=document.querySelector('.scards[data-pid="'+p.id+'"]'); el=wrap?wrap.closest('.seat'):null; }
+    if(el){ el.style.left=pos.x.toFixed(1)+'%'; el.style.top=pos.y.toFixed(1)+'%'; el.style.transform='translate(-50%,-50%)'; }
+  });
+}
+/* ---- Whiskey (LOCAL cosmetic fun — never game state, never synced) ----
+   Exact copy of Wellington's cognac logic, renamed. One editable const:
+   mild starts at 5 sips (3 min), strong at 15 (6 min). Sipping while
+   mild leaves the 3-minute timer alone (it runs from the 5th sip);
+   crossing 15 upgrades to strong with a fresh 6-minute timer; sipping
+   while strong adds 30s, capped at 6:00 remaining. "Sober up" clears
+   the effect early but keeps the sip count. */
+const WHISKEY = { mildSips: 5, mildMs: 180000, strongSips: 15, strongMs: 360000, strongSipBonusMs: 30000 };
+function drunkLevelForSips(sips){
+  if(sips>=WHISKEY.strongSips) return {level:'strong', label:'Wasted', ms:WHISKEY.strongMs};
+  if(sips>=WHISKEY.mildSips) return {level:'mild', label:'Tipsy', ms:WHISKEY.mildMs};
+  return {level:'sober', label:'Sober', ms:0};
+}
+let whiskeySips=0, whiskeyLevel='sober', whiskeyUntil=0, whiskeyTickTimer=null;
+function fmtMs(ms){ const s=Math.max(0,Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function updateWhiskeyUI(){
+  document.querySelectorAll('.whiskey-count').forEach(el=>{ el.textContent='Sips: '+whiskeySips; });
+  const remaining=whiskeyLevel==='sober'?0:whiskeyUntil-Date.now();
+  const label=whiskeyLevel==='sober'?'':(drunkLevelForSips(whiskeySips).label+' — '+fmtMs(remaining)+' left');
+  document.querySelectorAll('.whiskey-status').forEach(el=>{ el.textContent=label; });
+  document.querySelectorAll('.whiskey-sober').forEach(el=>{ el.classList.toggle('hidden', whiskeyLevel==='sober'); });
+  document.body.classList.toggle('drunk-mild', whiskeyLevel==='mild');
+  document.body.classList.toggle('drunk-strong', whiskeyLevel==='strong');
+}
+function whiskeyTick(){
+  if(whiskeyLevel==='sober'){ clearInterval(whiskeyTickTimer); whiskeyTickTimer=null; return; }
+  if(Date.now()>=whiskeyUntil){ soberUp(true); return; }
+  updateWhiskeyUI();
+}
+function sipWhiskey(){
+  whiskeySips++;
+  const now=Date.now();
+  const lvl=drunkLevelForSips(whiskeySips).level;
+  if(lvl==='mild'){
+    if(whiskeyLevel!=='mild'){ whiskeyLevel='mild'; whiskeyUntil=now+WHISKEY.mildMs; }
+  } else if(lvl==='strong'){
+    if(whiskeyLevel!=='strong'){ whiskeyLevel='strong'; whiskeyUntil=now+WHISKEY.strongMs; }
+    else { whiskeyUntil=Math.min(whiskeyUntil+WHISKEY.strongSipBonusMs, now+WHISKEY.strongMs); }
+  }
+  if(whiskeyLevel!=='sober'&&!whiskeyTickTimer) whiskeyTickTimer=setInterval(whiskeyTick, 1000);
+  updateWhiskeyUI();
+}
+function soberUp(expired){
+  whiskeyLevel='sober'; whiskeyUntil=0;
+  clearInterval(whiskeyTickTimer); whiskeyTickTimer=null;
+  updateWhiskeyUI();
+  if(!expired) toast('Sobered up. The table stops spinning. (Sip count kept: '+whiskeySips+'.)');
+}
+document.querySelectorAll('.whiskey-sip').forEach(b=>b.addEventListener('click', sipWhiskey));
+document.querySelectorAll('.whiskey-sober').forEach(b=>b.addEventListener('click', ()=>soberUp(false)));
+
+/* ---- gunshot sound (synthesized WebAudio — no audio file) ---- */
+let audioCtx=null;
+function playGunshot(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const t=audioCtx.currentTime;
+    // Noise burst (the crack) + low thump (the boom).
+    const dur=0.25, buf=audioCtx.createBuffer(1, audioCtx.sampleRate*dur, audioCtx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length, 2.2);
+    const src=audioCtx.createBufferSource(); src.buffer=buf;
+    const f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=800;
+    const g=audioCtx.createGain(); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+    src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t);
+    const o=audioCtx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t+0.22);
+    const og=audioCtx.createGain(); og.gain.setValueAtTime(0.7, t); og.gain.exponentialRampToValueAtTime(0.001, t+0.25);
+    o.connect(og); og.connect(audioCtx.destination); o.start(t); o.stop(t+0.26);
+  }catch(e){ /* sound is cosmetic — never break the game */ }
+}
+function gunshotFx(victimId){
+  playGunshot();
+  const m=$('muzzle'); m.classList.add('on');
+  setTimeout(()=>m.classList.remove('on'), 140);
+  document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake');
+  if(victimId){
+    const wrap=document.querySelector('.scards[data-pid="'+victimId+'"]');
+    const seat=wrap?wrap.closest('.seat'):null;
+    if(seat){ seat.classList.add('victim-flash'); setTimeout(()=>seat.classList.remove('victim-flash'), 1600); }
+  }
+}
+
+/* ---------- cards ---------- */
+function cardHtml(c, cls, extra){
+  const known=!!(c&&c.rank);
+  const red=known&&(c.suit==='\u2665'||c.suit==='\u2666');
+  return '<div class="card-big '+(known?'':'back ')+(red?'red ':'')+(cls||'')+'" '+(extra||'')+'>'+
+    (known?('<span>'+esc(c.rank)+'</span><span class="suit">'+esc(c.suit)+'</span>')
+          :'<span style="font-size:26px">🂠</span><span class="pts">?</span>')+'</div>';
+}
+function miniCardHtml(c){
+  const known=!!(c&&c.rank);
+  const red=known&&(c.suit==='\u2665'||c.suit==='\u2666');
+  return '<div class="mini-card '+(known?'':'back ')+(red?'red':'')+'">'+(known?('<span>'+esc(c.rank)+'</span><span>'+esc(c.suit)+'</span>'):'?')+'</div>';
+}
+function viewHashOf(v){ let h=5381; const s=JSON.stringify([v.phase,v.handNumber,v.turnIdx,v.deckCount,v.pot,v.currentBet,v.players.map(p=>[p.id,p.stack,p.bet,p.folded,p.cards.map(c=>c.id)])]); for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h; }
+function rulesHtml(){
+  return '<p><b>Goal:</b> the best 5-card hand takes the pot.</p>'+
+  '<table class="points"><tr><th>Hand</th><th>Beats</th></tr>'+
+  '<tr><td>Royal Flush</td><td>A-K-Q-J-10, same suit</td></tr>'+
+  '<tr><td>Straight Flush</td><td>Five in a row, same suit</td></tr>'+
+  '<tr><td>Four of a Kind</td><td>Four of the same rank</td></tr>'+
+  '<tr><td>Full House</td><td>Three of a kind + a pair</td></tr>'+
+  '<tr><td>Flush</td><td>Five of the same suit</td></tr>'+
+  '<tr><td>Straight</td><td>Five in a row (A-2-3-4-5 counts)</td></tr>'+
+  '<tr><td>Three of a Kind</td><td>Three of the same rank</td></tr>'+
+  '<tr><td>Two Pair</td><td>Two different pairs</td></tr>'+
+  '<tr><td>One Pair</td><td>Two of the same rank</td></tr>'+
+  '<tr><td>High Card</td><td>Nothing — highest card wins</td></tr></table>'+
+  '<ul style="margin:8px 0 8px 18px">'+
+  '<li><b>Ante round (every hand):</b> the <b>fastest click wins</b> — tap <b>10 / 100 / 500 / 1000</b> to set the entry amount for this hand. Everyone else must <b>top up that amount to enter</b>; anyone who doesn\'t stays a <b>spectator for that hand</b> and is automatically offered entry again next hand (no leaving and rejoining). If nobody enters, the round is <b>dead</b> — no cards are dealt, and the ante is set again (try a lower amount). A player with fewer chips than the ante goes all-in for what they have. At 0 chips you are busted and may <b>Rebuy</b> 5000 free chips between hands. Anyone can <b>leave the match at any time</b> with the Leave button.</li>'+
+  '<li><b>Deal:</b> 5 cards each from one 52-card deck, dealer button rotates clockwise every hand. No community cards.</li>'+
+  '<li><b>Draw (once per hand):</b> on your turn tap <b>0–3 cards</b> to exchange, then confirm (0 = stand pat). Discards go to the <b>bottom</b> of the deck; replacements come off the <b>top</b>. Only the count is logged — never the ranks.</li>'+
+  '<li><b>Betting (exactly one round, after all draws):</b> first to act is left of the dealer. <b>Call</b> = match the bet to stay in (when nothing has been bet yet, Call reads <b>Check</b>). <b>Raise</b> = match it plus extra (minimum raise is 10 chips or the size of the last raise, whichever is bigger). <b>All-in</b> = bet everything you have left. <b>Fold</b> = give up your hand and your chips in the pot. A player who just raised <b>can\'t raise again over their own raise</b> — they must wait until somebody else raises first (they can still fold, call, check, or all-in for the call amount). Betting ends when everyone left has matched the bet, or only one player remains.</li>'+
+  '<li><b>Chips — stage, then confirm:</b> clicking a chip or dragging it (10 / 100 / 500 / 1000) only <b>stages</b> it in your bet tray — nothing leaves your stack yet. Stack as many as you like (1000 + 500 + 100 = 1600 is easy), click a staged chip to <b>take it back</b>, then press <b>✅ Bet Ready</b> to commit. The tray tells you live what the staged bet means ("Call 200", "Raise to 700", "All-in", or what\'s missing). The Fold / Call / Raise / All-in buttons always work too.</li>'+
+  '<li><b>Showdown:</b> the last player to raise shows first, then clockwise. If everyone else folds, the survivor takes the pot without showing. Ties split the pot; any odd chip goes to the earliest winner clockwise from the dealer. Side pots are worked out properly when someone is all-in for less.</li>'+
+  '<li><b>🥃 Drink Whiskey:</b> purely cosmetic, local only — it wobbles YOUR screen a little (5+ sips) or a lot (15+ sips) and never touches the game or anyone else\'s screen. "Sober up" clears it early.</li>'+
+  '<li><b>Joining late?</b> If you join a game that\'s already in progress, you <b>spectate</b> — you see the table but every card stays hidden, and you are <b>automatically offered entry at the next hand\'s ante round</b> (just stay on the screen, no leaving and rejoining). If your connection drops mid-hand, you have <b>10 seconds</b> to reconnect and keep your seat; after that your seat is withdrawn and you come back as a spectator. Quit and slip back in before the 10 seconds <b>three times in a row</b> in the same room and you are <b>banned from rejoining that room</b> — a genuine dropout that stays away past 10 seconds never counts toward the three.</li></ul>';
+}
+function openRules(){ $('rulesBody').innerHTML=rulesHtml(); show('rulesModal',true); }
+$('btnRules').onclick=openRules; $('btnRules2').onclick=openRules;
+$('rulesClose').onclick=()=>show('rulesModal',false);
+$('rulesCloseX').onclick=()=>show('rulesModal',false);
+
+/* ---------- local / host game bootstrap ---------- */
+function botNames(n){ const pool=['Ada','Boris','Cleo','Dante','Esme','Felix']; return pool.slice(0,n).map(x=>x+' (bot)'); }
+function startLocalGame(names, seed, opts){
+  opts=opts||{};
+  fullState=newGame(names, seed, opts);
+  myId=fullState.players[0].id;
+  playMode='local'; isHost=true;
+  gameId++;
+  drawSelected=new Set(); staged=[]; stagedBaseBet=0; lastDealtHand=0; seenLogCount=0;
+  applyAction(fullState, myId, {type:'startHand'});
+  show('menuScreen',false); show('lobbyScreen',false); show('gameScreen',true);
+  $('connBox').textContent='Local game vs bots — no network needed. Ante is set fresh each hand — fastest click wins (bots propose 10 if you don\'t).';
+  refreshView(); render(); scheduleBots();
+}
+function refreshView(){
+  if(!fullState) return;
+  view=filteredView(fullState, myId);
+  if(lastShotFx) view.shotFx=lastShotFx;
+}
+function broadcastViews(){
+  if(!isHost||!fullState) return;
+  syncSeatsToClients();
+  refreshView(); render();
+  for(const cid of Object.keys(conns)){
+    const c=conns[cid];
+    if(c&&c.open){ try{ const v=filteredView(fullState, (c.gameId||cid)); if(lastShotFx) v.shotFx=lastShotFx; c.send({t:'view', view:v, hash:stateFingerprint(fullState), yourId:(c.gameId||cid)}); }catch(e){} }
+  }
+}
+function sendToHost(obj){ try{ if(conn&&conn.open) conn.send(obj); }catch(e){} }
+function doLocalAction(action){
+  if(!fullState) return null;
+  const res=applyAction(fullState, myId, action);
+  if(res&&res.ok){ noteAction(action, res, myId); afterAction(res, action); }
+  else if(res&&!res.ok){ toast(res.error); }
+  broadcastOrRefresh(); scheduleBots();
+  return res;
+}
+function afterAction(res, action){
+  if(res&&res.drawn){
+    // My new cards are in the filtered view already (own hand); just re-render.
+  }
+  if(fullState&&fullState.phase==='handOver') showOver();
+  if(fullState&&fullState.phase==='over') showOver();
+}
+function noteAction(action, res, actorId){
+  if(action&&action.type==='shoot'&&res&&res.ok){
+    lastShotFx={shooterId:actorId, victimId:res.victimId, at:Date.now()};
+    playedShotFxAt=lastShotFx.at; // heard it live — don't replay it on re-render
+    gunshotFx(res.victimId);
+    // Host: first shot opens the 2s window — resolve when it closes.
+    if(isHost&&res.windowEndsAt&&!shootoutTimer){
+      const wait=Math.max(0, res.windowEndsAt-Date.now());
+      shootoutTimer=setTimeout(()=>{ shootoutTimer=null; resolveShootoutHost(); }, wait);
+    }
+  }
+}
+/* Host resolves the shootout when the 2s window closes: the victim is
+   removed, their stack split among the shooters, everyone notified. */
+function resolveShootoutHost(){
+  if(!fullState||!fullState.shootout.armed) return;
+  const victimId=fullState.shootout.victimId;
+  const res=resolveShootout(fullState, Date.now());
+  if(res&&res.resolved){
+    // Tell the victim's browser it was shot off (before closing the conn).
+    for(const cid of Object.keys(conns)){
+      const seat=(conns[cid]&&conns[cid].gameId)||cid;
+      if(seat===victimId){
+        try{ conns[cid].send({t:'shot-off'}); }catch(e){}
+        try{ conns[cid].close(); }catch(e){}
+        delete conns[cid];
+        const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+      }
+    }
+    if(victimId===myId){
+      $('overTitle').textContent='💥 You were shot off the table';
+      $('overBody').innerHTML='<p style="color:var(--mut);font-size:14px;line-height:1.6">The table turned on you. Your remaining chips were split among the shooters and your seat is gone.</p>';
+      show('btnOverNextHand',false);
+      show('overModal',true);
+      setTimeout(()=>{ hideOver(); backToMenu(); }, 4000);
+    }
+  }
+  broadcastOrRefresh(); scheduleBots();
+}
+function submitAction(action){
+  if(amSpectator()){ toast('You are spectating — you\'ll be offered entry at the next ante round.'); return null; }
+  if(playMode==='online'&&!isHost){ sendToHost({t:'action', action}); return null; }
+  return doLocalAction(action);
+}
+function amSpectator(){ return isSpectator || (view && !view.players.some(p=>p.id===myId)); }
+
+/* ---------- rendering from the filtered view ---------- */
+function render(){
+  if(!view) return;
+  const me=view.players.find(p=>p.id===myId)||view.players[0];
+  const turnP=view.players.find(p=>p.id===view.turnPlayerId);
+  const isSpec=amSpectator();
+  const isMyDraw=view.phase==='draw'&&view.drawPlayerId===myId&&!isSpec;
+  const isMyBet=view.phase==='bet'&&view.turnPlayerId===myId&&!isSpec;
+  const myBet=me?me.bet:0;
+  const toCall=Math.max(0, view.currentBet-myBet);
+  // Shot FX: play the gunshot once per broadcast (host attaches shotFx).
+  // Everyone hears it, including the shooter (their own screen plays it
+  // when the ack/broadcast view arrives; the host already heard it live
+  // in noteAction, so playedShotFxAt guards against a replay).
+  if(view.shotFx&&view.shotFx.at!==playedShotFxAt){
+    playedShotFxAt=view.shotFx.at;
+    gunshotFx(view.shotFx.victimId);
+    toast((view.players.find(p=>p.id===view.shotFx.shooterId)||{}).name+' fired at '+(view.shootout.victimName||'the streak player')+'!');
+  }
+  // status
+  let status='';
+  if(view.phase==='over'){
+    status='🏆 Game over — '+(view.overReason||'');
+  } else if(view.phase==='handOver'){
+    const winNames=(view.winners||[]).map(id=>{ const p=view.players.find(x=>x.id===id); return p?p.name:id; });
+    status='🏆 Hand '+view.handNumber+' over — '+winNames.join(' & ')+' take'+(winNames.length>1?'':'s')+' the pot.';
+  } else if(view.phase==='ante'){
+    if(view.anteLocked){
+      const setter=(view.players.find(p=>p.id===view.anteSetterId)||{}).name||'someone';
+      status='🎩 Ante set at '+view.ante+' by '+setter+' — top up to enter, or sit this hand out.';
+    } else {
+      status='🎩 Ante round — fastest click sets the entry amount (10 / 100 / 500 / 1000).';
+    }
+  } else if(isSpec){
+    status='👀 Spectating — you\'re up for the next round. Stay on this screen: you\'ll be offered entry at the next ante round, no leaving and rejoining needed.';
+  } else if(view.phase==='draw'){
+    const dp=view.players.find(p=>p.id===view.drawPlayerId);
+    status= isMyDraw?'Your draw — tap 0–3 cards to exchange, then confirm.':(dp?dp.name+' is drawing…':'');
+  } else if(view.phase==='bet'){
+    status= isMyBet?('Your bet — '+(toCall===0?'check, raise or fold.':'call '+toCall+', raise, all-in or fold.')):(turnP?turnP.name+' is betting…':'');
+  } else {
+    status='Waiting…';
+  }
+  $('statusBox').innerHTML=esc(status)+'<small>'+esc('Hand '+view.handNumber+' • Ante '+view.ante+' • Pot '+view.pot+' chips • Deck '+view.deckCount+' cards • Dealer: '+((view.players.find(p=>p.id===view.dealerId)||{}).name||'—'))+'</small>';
+  // opponents
+  const oppBox=$('opponentsBox'); oppBox.innerHTML='';
+  view.players.filter(p=>p.id!==myId).forEach(p=>{
+    const d=document.createElement('div');
+    const active=(p.id===view.turnPlayerId||p.id===view.drawPlayerId)&&view.phase!=='handOver'&&view.phase!=='over';
+    d.className='seat'+(active?' active':'');
+    const handTag=(view.phase==='handOver'&&p.handName)?' • <b style="color:var(--gold)">'+esc(p.handName)+'</b>':'';
+    d.innerHTML='<div class="sname">'+esc(p.name)+(p.isBot?' 🤖':'')+(p.id===view.dealerId?'<span class="dealer-badge">⭐ DEALER</span>':'')+' <span class="tag2">'+(p.sitOut?(p.busted?'• busted':(p.spectator?'• spectating this hand':'• sitting out')):(p.folded?'• folded':'• '+p.stack+' chips'+(p.bet>0?' • bet '+p.bet:'')))+(active?' • to move':'')+(p.disconnected?' • disconnected':'')+'</span></div>'+
+      '<div class="scards" data-pid="'+p.id+'">'+p.cards.map(c=>miniCardHtml(c)).join('')+'</div>'+(handTag?'<div style="font-size:13px;margin-top:4px">'+handTag+'</div>':'');
+    oppBox.appendChild(d);
+  });
+  // centre
+  $('potTotal').textContent='🪙 '+view.pot;
+  $('potSub').textContent=view.currentBet>0?('current bet '+view.currentBet+' • min raise '+view.minRaise):'no bet yet';
+  $('deckCount').textContent=view.deckCount+' left';
+  $('deckSub').textContent='52-card deck';
+  // my seat
+  const myBox=$('mySeat'); myBox.innerHTML='';
+  if(isSpec){
+    myBox.innerHTML='<div class="seat"><div class="sname">👀 Spectating</div><div style="color:var(--mut);font-size:14px;line-height:1.5;padding:6px 0">You are watching this game. You\'re up for the next round — just stay on this screen and you\'ll be offered entry at the next ante round. No leaving and rejoining needed.</div></div>';
+  } else {
+    const md=document.createElement('div');
+    md.className='seat'+((isMyDraw||isMyBet)?' active':'');
+    const handTag=(view.phase==='handOver'&&me.handName)?' • <b style="color:var(--gold)">'+esc(me.handName)+'</b>':'';
+    md.innerHTML='<div class="sname">'+esc(me.name)+' (you) '+(me.id===view.dealerId?'<span class="dealer-badge">⭐ DEALER</span>':'')+' <span class="tag2">'+(me.sitOut?(me.busted?'• busted':(me.spectator?'• spectating this hand':'• sitting out')):('• '+me.stack+' chips'+(me.bet>0?' • bet '+me.bet:'')))+'</span></div><div class="scards" id="myCards"></div>'+(handTag?'<div style="font-size:13px;margin-top:4px">'+handTag+'</div>':'');
+    myBox.appendChild(md);
+    const myCards=$('myCards');
+    me.cards.forEach((c,i)=>{
+      const holder=document.createElement('span');
+      holder.innerHTML=cardHtml(c, drawSelected.has(i)?'sel':'');
+      const el=holder.firstChild;
+      el.addEventListener('click',()=>onMyCard(i));
+      myCards.appendChild(el);
+    });
+  }
+  // draw box
+  show('drawBox', !!isMyDraw);
+  if(isMyDraw) $('drawCount').textContent=drawSelected.size;
+  // bet box
+  show('betBox', !!isMyBet);
+  if(isMyBet){
+    $('betPrompt').textContent='Your bet — pot '+view.pot+' • to call: '+toCall+' • your stack: '+me.stack;
+    $('btnCall').textContent=toCall===0?'Check':'Call '+toCall;
+    const iAmLastRaiser=view.lastRaiserId===myId;
+    $('btnRaise').disabled=iAmLastRaiser||me.stack<=toCall;
+    $('btnRaise').title=iAmLastRaiser?'You just raised — you cannot raise again over your own raise until somebody else raises first.':'';
+    $('btnAllIn').disabled=me.stack<=0;
+    updateRaiseLabel();
+  } else { show('raiseBox', false); }
+  // next hand / rebuy
+  const handOver=view.phase==='handOver';
+  show('btnNextHand', handOver&&(playMode==='local'||isHost));
+  show('btnRebuy', handOver&&me&&me.stack===0&&!isSpec);
+  // shoot button (secret rule): only for other human players, when armed.
+  const shoot=view.shootout||{};
+  const showShoot=!!(shoot.armed&&shoot.canShoot);
+  show('shootBtn', showShoot);
+  if(showShoot){
+    const fired=shoot.shotsFired||0;
+    $('shootBtn').innerHTML='🔫 Shoot\'em Dead <span style="font-size:13px">('+(6-fired)+' bullets left)</span><span class="chambers">'+[0,1,2,3,4,5].map(i=>'<span class="'+(i<fired?'spent':'')+'"></span>').join('')+'</span>';
+    $('shootBtn').disabled=fired>=6;
+  }
+  // log
+  $('logBox').innerHTML=(view.log||[]).map(l=>'<div>'+esc(l)+'</div>').join('');
+  renderAnteBox();
+  updateStageUI();
+  // Card animations (visual only — never gate the engine).
+  if(view.phase==='draw' && view.handNumber!==lastDealtHand && !$('gameScreen').classList.contains('hidden')){
+    lastDealtHand=view.handNumber;
+    animateDeal();
+  }
+  animateDrawsFromLog();
+  positionRoundSeats();
+  if(view.phase==='handOver') showOver();
+  if(view.phase==='over') showOver();
+}
+function updateRaiseLabel(){
+  if(!view) return;
+  const me=view.players.find(p=>p.id===myId); if(!me) return;
+  const to=view.currentBet+Math.max(view.minRaise, raiseExtra);
+  const capped=Math.min(to, me.bet+me.stack);
+  $('raiseToLabel').textContent=capped;
+}
+/* ---------- ante round panel (explicit: fastest click sets the entry) ---------- */
+function renderAnteBox(){
+  const box=$('anteBox');
+  const inAnte=view&&view.phase==='ante';
+  show('anteBox', !!inAnte);
+  if(!inAnte) return;
+  const me=view.players.find(p=>p.id===myId);
+  const statusEl=$('anteStatus'), proposeEl=$('antePropose'), enterEl=$('anteEnter'),
+        deadEl=$('anteDeadNote'), waitEl=$('anteWaiting');
+  proposeEl.innerHTML=''; enterEl.innerHTML=''; waitEl.textContent='';
+  // Dead-round note: the dead-round log line is followed at once by the
+  // fresh "Ante round" line (the engine reopens proposing immediately),
+  // so look at the last few lines, not just the last one.
+  const recent=(view.log||[]).slice(-3);
+  const deadLine=recent.find(l=>l.indexOf('Dead round')===0);
+  if(deadLine){ deadEl.textContent='💀 '+deadLine+' Try a lower ante.'; show('anteDeadNote',true); }
+  else show('anteDeadNote',false);
+  if(!me){
+    // Pure spectator (waiting for a seat — table full): nothing to click.
+    statusEl.textContent='You are waiting for a seat — you\'ll be offered entry as soon as one frees up.';
+    return;
+  }
+  if(!view.anteLocked){
+    statusEl.textContent='Fastest click wins — tap an amount to set the entry ante for this hand. Everyone else then tops it up to enter, or sits this hand out.';
+    if(me.stack>0&&!me.disconnected){
+      for(const a of [10,100,500,1000]){
+        const b=document.createElement('button'); b.type='button'; b.textContent=a+' chips';
+        b.onclick=()=>submitAction({type:'proposeAnte', amount:a});
+        proposeEl.appendChild(b);
+      }
+    } else if(me.stack<=0){
+      statusEl.textContent='You have no chips — rebuy between hands to play. Waiting for someone to set the ante…';
+    } else {
+      statusEl.textContent='Waiting for someone to set the ante…';
+    }
+    return;
+  }
+  const setter=(view.players.find(p=>p.id===view.anteSetterId)||{}).name||'someone';
+  statusEl.innerHTML='<span class="ante-set">Ante set by '+esc(setter)+' — '+view.ante+' chips.</span>';
+  if(myId===view.anteSetterId){
+    enterEl.innerHTML='<span style="color:var(--gold);font-weight:800">You set the ante — you\'re in.</span>';
+  } else if((view.anteEligible||[]).indexOf(myId)>=0 && !Object.prototype.hasOwnProperty.call(view.entered||{}, myId)){
+    const bIn=document.createElement('button'); bIn.type='button'; bIn.textContent='Enter — top up '+view.ante+' chips';
+    bIn.onclick=()=>submitAction({type:'enterHand', enter:true});
+    const bOut=document.createElement('button'); bOut.type='button'; bOut.className='ghost'; bOut.textContent='Sit Out (spectate this hand)';
+    bOut.onclick=()=>submitAction({type:'enterHand', enter:false});
+    enterEl.appendChild(bIn); enterEl.appendChild(bOut);
+  } else if(Object.prototype.hasOwnProperty.call(view.entered||{}, myId)){
+    enterEl.innerHTML='<span style="color:var(--mut)">'+(view.entered[myId]?'You entered — waiting for the deal.':'You\'re spectating this hand — you\'ll be offered entry again next hand.')+'</span>';
+  } else {
+    enterEl.innerHTML='<span style="color:var(--mut)">You\'re spectating this hand — you\'ll be offered entry again next hand.</span>';
+  }
+  const waiting=(view.anteEligible||[]).filter(id=>!Object.prototype.hasOwnProperty.call(view.entered||{}, id))
+    .map(id=>{ const p=view.players.find(x=>x.id===id); return p?p.name:id; });
+  if(waiting.length) waitEl.textContent='Still deciding: '+waiting.join(', ')+'…';
+}
+
+/* ---------- staged chip betting (UI-local until Bet Ready) ---------- */
+function stageTotal(){ return staged.reduce((a,b)=>a+b,0); }
+function stageChip(value){
+  if(!view||view.phase!=='bet'||view.turnPlayerId!==myId){ toast('Chips only count on your betting turn.'); return; }
+  const me=view.players.find(p=>p.id===myId); if(!me) return;
+  if(stageTotal()+value>me.stack){ toast('That is more chips than you have left.'); return; }
+  if(!staged.length) stagedBaseBet=me.bet;
+  staged.push(value);
+  updateStageUI();
+}
+function clearStaged(){ staged=[]; stagedBaseBet=0; updateStageUI(); }
+function stageEffectText(){
+  if(!view) return '';
+  const me=view.players.find(p=>p.id===myId); if(!me) return '';
+  const total=stageTotal();
+  if(total===0) return 'Stage chips to bet — click or drag chips in.';
+  const newTotal=me.bet+total;
+  if(newTotal<view.currentBet) return 'Need '+(view.currentBet-me.bet)+' to call — stage '+(view.currentBet-newTotal)+' more.';
+  if(newTotal===view.currentBet) return (view.currentBet-me.bet)===0?'Check.':'Call '+view.currentBet+'.';
+  const extra=newTotal-view.currentBet;
+  if(total>=me.stack) return 'All-in for '+(me.bet+me.stack)+'.';
+  if(extra<view.minRaise) return 'Raise of '+extra+' is below the minimum raise of '+view.minRaise+' — stage more, or stage exactly the call of '+view.currentBet+'.';
+  return 'Raise to '+newTotal+'.';
+}
+function updateStageUI(){
+  const box=$('stageBox');
+  const isMyBet=view&&view.phase==='bet'&&view.turnPlayerId===myId&&!amSpectator();
+  // A staged bet that landed (my bet changed) or a turn that passed
+  // clears the tray — the chips are in the pot now, or the moment is gone.
+  if(staged.length&&view){
+    const me=view.players.find(p=>p.id===myId);
+    if(view.phase!=='bet'||!me||me.bet!==stagedBaseBet) staged=[];
+  }
+  show('stageBox', !!isMyBet);
+  if(!isMyBet) return;
+  $('stageTotal').textContent=stageTotal();
+  $('stageEffect').textContent=stageEffectText();
+  $('btnBetReady').disabled=stageTotal()===0;
+  const chipsEl=$('stageChips'); chipsEl.innerHTML='';
+  if(!staged.length){
+    chipsEl.innerHTML='<span class="stage-empty">No chips staged yet — tap a chip below, or drag one here.</span>';
+    return;
+  }
+  staged.forEach((v,i)=>{
+    const ch=document.createElement('div');
+    ch.className='chip c'+v; ch.textContent=v; ch.title='Click to take this chip back';
+    ch.onclick=()=>{ staged.splice(i,1); updateStageUI(); };
+    chipsEl.appendChild(ch);
+  });
+}
+
+/* ---------- card animations (visual only — never gate the engine) ---------- */
+function prefersReducedMotion(){ try{ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; } }
+function flyCard(fromEl, toEl){
+  if(prefersReducedMotion()||!fromEl||!toEl) return;
+  const fr=fromEl.getBoundingClientRect(), tr=toEl.getBoundingClientRect();
+  if(!fr.width||!tr.width) return;
+  const el=document.createElement('div');
+  el.className='mini-card back fly-card'; el.textContent='?';
+  el.style.left=(fr.left+fr.width/2-17)+'px';
+  el.style.top=(fr.top+fr.height/2-24)+'px';
+  document.body.appendChild(el);
+  const dx=(tr.left+tr.width/2)-(fr.left+fr.width/2);
+  const dy=(tr.top+tr.height/2)-(fr.top+fr.height/2);
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ el.style.transform='translate('+dx.toFixed(0)+'px,'+dy.toFixed(0)+'px) rotate('+((Math.random()*24-12).toFixed(0))+'deg)'; el.style.opacity='0.15'; }); });
+  setTimeout(()=>{ el.remove(); }, 700);
+}
+function seatCardsEl(p){
+  if(p.id===myId) return $('myCards')||$('mySeat');
+  return document.querySelector('.scards[data-pid="'+p.id+'"]');
+}
+function animateDeal(){
+  const deck=$('deckPile'); if(!deck) return;
+  (view.players||[]).forEach((p,idx)=>{
+    if(p.sitOut) return;
+    const target=seatCardsEl(p); if(!target) return;
+    for(let k=0;k<3;k++) setTimeout(()=>flyCard(deck, target), idx*90+k*70);
+  });
+}
+function animateDrawsFromLog(){
+  if(!view||!view.log) return;
+  if(view.log.length<seenLogCount) seenLogCount=0; // log trimmed to last 40
+  for(let i=seenLogCount;i<view.log.length;i++){
+    const m=view.log[i].match(/^(.+?) discarded (\d+) cards? and drew (\d+)\.?$/);
+    if(!m) continue;
+    const n=parseInt(m[2],10);
+    if(!n) continue;
+    const p=(view.players||[]).find(x=>x.name===m[1]);
+    if(!p) continue;
+    const seatEl=seatCardsEl(p), deck=$('deckPile');
+    if(!seatEl||!deck) continue;
+    const count=Math.min(n,3);
+    for(let k=0;k<count;k++){
+      setTimeout(()=>flyCard(seatEl, deck), k*80);
+      setTimeout(()=>flyCard(deck, seatEl), 260+k*80);
+    }
+  }
+  seenLogCount=view.log.length;
+}
+function showOver(){
+  if(!view||(view.phase!=='handOver'&&view.phase!=='over')) return;
+  if(view.phase==='over'){
+    $('overTitle').textContent='🏆 Game over';
+    $('overBody').innerHTML='<p style="color:var(--mut)">'+esc(view.overReason||'')+'</p>';
+    show('btnOverNextHand',false);
+    show('overModal',true);
+    return;
+  }
+  const winNames=(view.winners||[]).map(id=>{ const p=view.players.find(x=>x.id===id); return p?p.name:id; });
+  $('overTitle').textContent='🏆 '+(winNames.length>1?'Shared pot!':winNames.join(' & ')+' takes the pot!');
+  $('overBody').innerHTML=(view.players||[]).map(p=>{
+    const isW=(view.winners||[]).indexOf(p.id)>=0;
+    const amt=(view.payouts||{})[p.id]||0;
+    return '<div class="end-card'+(isW?' winner':'')+'"><b>'+esc(p.name)+'</b>'+(isW?' 👑':'')+(p.handName?' — <b>'+esc(p.handName)+'</b>':'')+(amt>0?' — won '+amt+' chips':'')+' • stack '+p.stack+'</div>';
+  }).join('')+'<p style="color:var(--mut);font-size:13px">'+esc(view.overReason||'')+'</p>';
+  show('btnOverNextHand', playMode==='local'||isHost);
+  show('overModal',true);
+}
+function hideOver(){ show('overModal',false); }
+
+/* ---------- clicks ---------- */
+function onMyCard(slot){
+  if(!view) return;
+  if(view.phase==='draw'&&view.drawPlayerId===myId){
+    if(drawSelected.has(slot)) drawSelected.delete(slot);
+    else {
+      if(drawSelected.size>=3){ toast('At most 3 cards — tap a selected card to unpick it.'); return; }
+      drawSelected.add(slot);
+    }
+    render(); return;
+  }
+  toast(view.phase==='draw'?'Wait for your draw turn.':(view.phase==='bet'?'Use the betting buttons (or drag chips to the pot).':'Cards are dealt — wait for your turn.'));
+}
+$('btnConfirmDraw').addEventListener('click',()=>{
+  const slots=[...drawSelected].sort((a,b)=>a-b);
+  drawSelected=new Set(); clearStaged();
+  submitAction({type:'draw', slots});
+});
+$('btnStandPat').addEventListener('click',()=>{
+  drawSelected=new Set(); clearStaged();
+  submitAction({type:'draw', slots:[]});
+});
+$('btnFold').addEventListener('click',()=>{ clearStaged(); submitAction({type:'fold'}); });
+$('btnCall').addEventListener('click',()=>{
+  if(!view) return;
+  const me=view.players.find(p=>p.id===myId); if(!me) return;
+  clearStaged();
+  submitAction({type:'bet', amount:view.currentBet});
+});
+$('btnAllIn').addEventListener('click',()=>{
+  if(!view) return;
+  const me=view.players.find(p=>p.id===myId); if(!me) return;
+  clearStaged();
+  if(!confirm('Go ALL-IN for '+(me.bet+me.stack)+' chips?')) return;
+  submitAction({type:'bet', amount:me.bet+me.stack});
+});
+$('btnBetReady').addEventListener('click',()=>{
+  if(!view) return;
+  const total=stageTotal();
+  if(total<=0) return;
+  const res=submitAction({type:'betChips', amount:total});
+  // Local/host: the result is known at once — clear on success, keep the
+  // staged chips in place on rejection so the player can fix the amount.
+  // Online guests: the result arrives with the next view; render() clears
+  // the tray when my bet changes, and the error toast keeps the chips.
+  if(res&&res.ok) clearStaged();
+  else if(res&&!res.ok) toast(res.error);
+});
+$('btnStageClear').addEventListener('click',()=>clearStaged());
+$('btnRaise').addEventListener('click',()=>{
+  show('raiseBox', true);
+  updateRaiseLabel();
+});
+$('btnRaiseCancel').addEventListener('click',()=>show('raiseBox', false));
+document.querySelectorAll('.raise-quick').forEach(b=>b.addEventListener('click',()=>{
+  raiseExtra=parseInt(b.getAttribute('data-raise'),10)||50;
+  updateRaiseLabel();
+}));
+$('raiseCustom').addEventListener('input',()=>{
+  const v=parseInt($('raiseCustom').value,10);
+  if(!isNaN(v)&&v>0) raiseExtra=v;
+  updateRaiseLabel();
+});
+$('btnRaiseConfirm').addEventListener('click',()=>{
+  if(!view) return;
+  const me=view.players.find(p=>p.id===myId); if(!me) return;
+  const to=Math.min(view.currentBet+Math.max(view.minRaise, raiseExtra), me.bet+me.stack);
+  clearStaged();
+  show('raiseBox', false);
+  // Raises route through the same staged-bet path as Bet Ready: the
+  // amount is ADDITIONAL chips on top of what I already bet this round.
+  submitAction({type:'betChips', amount:to-me.bet});
+});
+$('btnNextHand').addEventListener('click',()=>{
+  hideOver();
+  if(playMode==='online'&&!isHost){ sendToHost({t:'next-hand'}); return; }
+  const r=doLocalAction({type:'nextHand'});
+  if(r&&r.ok){ promoteWaitingSpectators(); broadcastOrRefresh(); }
+});
+$('btnOverNextHand').addEventListener('click',()=>{
+  hideOver();
+  if(playMode==='online'&&!isHost){ sendToHost({t:'next-hand'}); return; }
+  const r=doLocalAction({type:'nextHand'});
+  if(r&&r.ok){ promoteWaitingSpectators(); broadcastOrRefresh(); }
+});
+$('btnRebuy').addEventListener('click',()=>submitAction({type:'rebuy'}));
+$('btnMenu2').onclick=leaveMatch;
+$('btnOverMenu').onclick=()=>{ hideOver(); leaveMatch(); };
+$('btnBannedMenu').onclick=()=>{ show('bannedModal',false); backToMenu(); };
+$('shootBtn').addEventListener('click',()=>{
+  if(!view||!view.shootout||!view.shootout.canShoot) return;
+  submitAction({type:'shoot', nowMs:Date.now()});
+});
+/* Leaving the match at any time: voluntary — tell the host first (so the
+   seat is freed at once, no 10s hold), then go back to the menu. */
+function leaveMatch(){
+  if(fullState&&myId&&fullState.phase!=='over'&&(playMode==='local'||isHost)) doLocalAction({type:'leave'});
+  else if(playMode==='online'&&!isHost&&(!view||view.phase!=='over')) sendToHost({t:'leave'});
+  backToMenu();
+}
+$('btnLeaveMatch').addEventListener('click', leaveMatch);
+function backToMenu(){
+  staged=[]; stagedBaseBet=0;
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  if(shootoutTimer){ clearTimeout(shootoutTimer); shootoutTimer=null; }
+  for(const k of Object.keys(disconnectedByClient)){ clearTimeout(disconnectedByClient[k].timer); delete disconnectedByClient[k]; }
+  spectators={};
+  roomCode=null; isSpectator=false;
+  unregisterPublicRoom();
+  try{ if(conn) conn.close(); }catch(e){}
+  try{ if(peer) peer.destroy(); }catch(e){}
+  for(const c of Object.values(conns)){ try{ c.close(); }catch(e){} }
+  peer=null; conn=null; conns={}; clients={}; roomCode=null; fullState=null; view=null;
+  stopHeartbeat(); stopHelloLoop(); clearTimeout(resendTimer); clearTimeout(botTimer);
+  setMenuMsg(''); hideOver();
+  show('gameScreen',false); show('lobbyScreen',false); show('menuScreen',true);
+}
+
+/* ---------- staged chip betting: chips are visual + engine-backed ----------
+   Clicking or dragging a chip only STAGES it in the bet tray — nothing
+   leaves the stack until ✅ Bet Ready commits it via {type:'betChips'}.
+   Staged chips can be clicked back to the stack before committing.
+   The Fold / Call / Raise / All-in buttons always work too. */
+function myBetState(){
+  if(!view) return null;
+  const me=view.players.find(p=>p.id===myId); if(!me) return null;
+  return {me, toCall:Math.max(0, view.currentBet-me.bet), maxBet:me.bet+me.stack};
+}
+function chipDragSetup(){
+  const drop=$('potDrop');
+  document.querySelectorAll('.chip').forEach(ch=>{
+    const value=parseInt(ch.getAttribute('data-chip'),10);
+    ch.addEventListener('click',()=>stageChip(value));
+    // HTML5 drag (desktop)
+    ch.addEventListener('dragstart',e=>{ try{ e.dataTransfer.setData('text/plain', String(value)); }catch(err){} ch.classList.add('dragging'); });
+    ch.addEventListener('dragend',()=>ch.classList.remove('dragging'));
+    // Pointer drag (touch + mouse)
+    ch.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      const ghost=ch.cloneNode(true);
+      ghost.style.position='fixed'; ghost.style.zIndex=200; ghost.style.pointerEvents='none'; ghost.style.opacity='.92';
+      document.body.appendChild(ghost);
+      const overTray=(ev)=>{
+        const r=drop.getBoundingClientRect();
+        const t=$('stageBox').getBoundingClientRect();
+        return (ev.clientX>=r.left-24&&ev.clientX<=r.right+24&&ev.clientY>=r.top-24&&ev.clientY<=r.bottom+24)
+          || (ev.clientX>=t.left&&ev.clientX<=t.right&&ev.clientY>=t.top&&ev.clientY<=t.bottom);
+      };
+      const move=(ev)=>{
+        ghost.style.left=(ev.clientX-28)+'px'; ghost.style.top=(ev.clientY-28)+'px';
+        drop.classList.toggle('drop-ready', overTray(ev));
+      };
+      const up=(ev)=>{
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        document.removeEventListener('pointercancel', up);
+        ghost.remove(); drop.classList.remove('drop-ready');
+        if(overTray(ev)) stageChip(value);
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', up);
+      move(e);
+    });
+  });
+  drop.addEventListener('dragover',e=>{ e.preventDefault(); drop.classList.add('drop-ready'); });
+  drop.addEventListener('dragleave',()=>drop.classList.remove('drop-ready'));
+  drop.addEventListener('drop',e=>{
+    e.preventDefault(); drop.classList.remove('drop-ready');
+    const v=parseInt(e.dataTransfer.getData('text/plain'),10);
+    if(!isNaN(v)) stageChip(v);
+  });
+}
+chipDragSetup();
+
+/* ---------- bots (local + host-run) ---------- */
+function scheduleBots(delay){
+  clearTimeout(botTimer);
+  if(!fullState) return;
+  if(fullState.phase==='handOver'){
+    // Bot games auto-advance; online games wait for the host's Next Hand.
+    if(playMode==='local'){
+      const gid=gameId;
+      botTimer=setTimeout(()=>{ if(gid===gameId&&fullState&&fullState.phase==='handOver') doLocalAction({type:'nextHand'}); }, 2500);
+    }
+    return;
+  }
+  if(fullState.phase==='over') return;
+  const gid=gameId;
+  // Ante round: give a human ~3s to propose first (fastest click wins),
+  // then a bot proposes 10. Once the ante is locked, bots answer entry
+  // on the normal think beat.
+  let wait=(delay===undefined)?pace(BOT_PACE.thinkMin,BOT_PACE.thinkMax):delay;
+  if(fullState.phase==='ante'&&!fullState.anteLocked) wait=3000;
+  botTimer=setTimeout(()=>{
+    if(gid!==gameId||!fullState||fullState.phase==='over'||fullState.phase==='handOver') return;
+    if(fullState.phase==='ante'){
+      // Drive every bot that has an ante action, in seat order: the first
+      // proposes (locking the ante), the rest then top up / sit out.
+      // Bots answer at once — no fake thinking delay between them.
+      let acted=false;
+      for(const p of fullState.players.slice()){
+        if(!p.isBot||p.disconnected) continue;
+        const a=botChooseAction(fullState,p.id);
+        if(a){ const r=applyAction(fullState,p.id,a); if(r&&r.ok){ noteAction(a,r,p.id); acted=true; } }
+        if(fullState.phase!=='ante') break;
+      }
+      if(acted) broadcastOrRefresh();
+      scheduleBots();
+      return;
+    }
+    const actorId = fullState.phase==='draw'
+      ? (fullState.players[fullState.drawTurnIdx]||{}).id
+      : fullState.players[fullState.turnIdx].id;
+    const bot=fullState.players.find(p=>p.id===actorId&&p.isBot);
+    if(bot){
+      const a=botChooseAction(fullState,bot.id);
+      if(a){ const r=applyAction(fullState,bot.id,a); if(r&&r.ok){ noteAction(a,r,bot.id); broadcastOrRefresh(); } }
+      scheduleBots(a&&a.type==='draw'?pace(BOT_PACE.afterDrawMin,BOT_PACE.afterDrawMax):pace(BOT_PACE.thinkMin,BOT_PACE.thinkMax));
+      return;
+    }
+    // No bot to act (a human must act) — poll again shortly in case a
+    // bot becomes the actor (e.g. after a human folds).
+    botTimer=setTimeout(()=>scheduleBots(), 800);
+  }, wait);
+}
+function broadcastOrRefresh(){
+  if(playMode==='online'&&isHost) broadcastViews();
+  else { refreshView(); render(); }
+  if(fullState&&(fullState.phase==='handOver'||fullState.phase==='over')) showOver();
+}
+
+/* ---------- multiplayer (PeerJS, host-authoritative, filtered views) ---------- */
+function peerIdFor(code){ return 'five-card-poker-v1-'+code.toUpperCase(); }
+function makeCode(){ const chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+function myPlayerName(){ return ($('nameInput').value||'').trim()||'Player'; }
+function startHeartbeat(){
+  stopHeartbeat();
+  if(playMode!=='online') return;
+  heartbeatTimer=setInterval(()=>{
+    if(isHost){ for(const cid of Object.keys(conns)){ const c=conns[cid]; if(c&&c.open){ try{ c.send({t:'ping', hash:stateFingerprint(fullState), n:fullState.log.length}); }catch(e){} } } }
+    else sendToHost({t:'ping', hash:view?viewHashOf(view):0, n:view?view.log.length:0});
+  },4000);
+}
+function stopHeartbeat(){ clearInterval(heartbeatTimer); heartbeatTimer=null; }
+function startHelloLoop(){ stopHelloLoop(); helloTimer=setInterval(()=>{ if(!stateReceived) sendToHost({t:'hello'}); else stopHelloLoop(); },2000); sendToHost({t:'hello'}); }
+function stopHelloLoop(){ clearInterval(helloTimer); helloTimer=null; }
+function renderLobby(){
+  $('lobbyCode').textContent=roomCode||'';
+  $('lobbyMsg').textContent=(roomVisibility==='public'?'🌍 Public room — listed in Browse public rooms while it waits for players. ':'🔒 Private room — code-only. ')+'Max '+roomMaxPlayers+' players (bots included). Ante is set fresh each hand — fastest click wins. Share the code with your friends.';
+  $('lobbyList').innerHTML=lobbyPlayers.map(p=>'<div class="lobby-player"><span>'+esc(p.name)+(p.isBot?' 🤖':'')+'</span><span style="color:var(--mut)">'+(p.isHost?'host':'')+'</span></div>').join('')+
+    '<p style="color:var(--mut);font-size:13px;margin-top:8px">'+lobbyPlayers.length+' / '+roomMaxPlayers+' players — need at least 2 to start.</p>';
+  show('btnStartGame', isHost);
+  $('btnStartGame').disabled=lobbyPlayers.length<2;
+  $('lobbyWait').textContent=isHost?'You are the host — press Start when everyone is in.':'Waiting for the host to start…';
+}
+function showLobby(){
+  show('menuScreen',false); show('gameScreen',false); show('lobbyScreen',true); renderLobby();
+}
+function openBotPicker(title, sub, onPick){
+  $('botModalTitle').textContent=title; $('botModalSub').textContent=sub;
+  const box=$('botPick'); box.innerHTML='';
+  for(let n=0;n<=5;n++){
+    const b=document.createElement('button'); b.type='button'; b.textContent=n===0?'0':(''+n);
+    b.title=n+' bot'+(n===1?'':'s');
+    b.onclick=()=>{ show('botModal',false); onPick(n); };
+    box.appendChild(b);
+  }
+  show('botModal',true);
+}
+$('botCancel').onclick=()=>show('botModal',false);
+$('btnBots').onclick=()=>{
+  openBotPicker('How many bots?', 'You + bots, 2–6 players total. Fully local, works offline.', (n)=>{
+    if(n<1){ setMenuMsg('Pick at least 1 bot for a solo game — or create a lobby to play with friends.'); return; }
+    const names=[{name:myPlayerName(),isBot:false}].concat(botNames(n).map(x=>({name:x,isBot:true})));
+    startLocalGame(names, undefined, {ante: DEFAULT_ANTE});
+  });
+};
+function openRoomOptions(){
+  roomVisibility='private'; roomMaxPlayers=6;
+  const minMax=1+pendingLobbyBots;
+  const visBox=$('visPick');
+  const paintVis=()=>{ visBox.querySelectorAll('button').forEach(b=>{ b.style.outline=(b.getAttribute('data-vis')===roomVisibility)?'3px solid var(--gold)':'none'; }); };
+  visBox.querySelectorAll('button').forEach(b=>{ b.onclick=()=>{ roomVisibility=b.getAttribute('data-vis'); paintVis(); }; });
+  paintVis();
+  const maxBox=$('maxPick'); maxBox.innerHTML='';
+  for(let n=2;n<=6;n++){
+    const b=document.createElement('button'); b.type='button'; b.textContent=''+n;
+    b.disabled=n<minMax;
+    b.onclick=()=>{ roomMaxPlayers=n; paintMax(); };
+    maxBox.appendChild(b);
+  }
+  const paintMax=()=>{ maxBox.querySelectorAll('button').forEach(b=>{ b.style.outline=(parseInt(b.textContent,10)===roomMaxPlayers)?'3px solid var(--gold)':'none'; }); };
+  if(roomMaxPlayers<minMax) roomMaxPlayers=minMax;
+  paintMax();
+  $('roomOptMsg').textContent= pendingLobbyBots>0 ? ('You + '+pendingLobbyBots+' bot'+(pendingLobbyBots===1?'':'s')+' already take '+(1+pendingLobbyBots)+' seats, so the max starts there.') : '';
+  show('roomOptModal',true);
+}
+$('roomOptCancel').onclick=()=>show('roomOptModal',false);
+$('roomOptCreate').onclick=()=>{ show('roomOptModal',false); doCreateLobby(); };
+$('btnCreate').onclick=()=>{
+  if(typeof Peer==='undefined'){ setMenuMsg('Could not load the multiplayer library (PeerJS). Check your connection — bot play still works.'); return; }
+  openBotPicker('Create lobby — how many bots?', 'Bots fill seats in your lobby (max 6 players total: humans + bots).', (n)=>{
+    pendingLobbyBots=n; openRoomOptions();
+  });
+};
+function doCreateLobby(){
+  lobbyBots=pendingLobbyBots;
+  const code=makeCode(); roomCode=code;
+  setMenuMsg('Creating lobby '+code+'…');
+  try{ if(peer) peer.destroy(); }catch(e){}
+  peer=new Peer(peerIdFor(code));
+  peer.on('open',()=>{
+    isHost=true; playMode='online';
+    lobbyPlayers=[{id:'host',name:myPlayerName(),isBot:false,isHost:true}];
+    for(let i=0;i<lobbyBots;i++) lobbyPlayers.push({id:'bot'+i,name:botNames(lobbyBots)[i],isBot:true});
+    setMenuMsg('Lobby '+code+' is live — send the code to your friends.');
+    showLobby(); startHeartbeat();
+    if(roomVisibility==='public') registerPublicRoom();
+  });
+  peer.on('connection',c=>{
+    const cid='c'+Math.random().toString(36).slice(2,8);
+    conns[cid]=c; clients[cid]={name:'…'};
+    c.on('data',msg=>handleHostMsg(cid,msg));
+    c.on('close',()=>{ onGuestDisconnect(cid); });
+    c.on('open',()=>{ try{ c.send({t:'welcome', yourId:cid, code:roomCode}); }catch(e){} });
+  });
+  peer.on('error',err=>{ setMenuMsg('Could not create the lobby ('+(err&&err.type||'error')+'). Try again.'); });
+}
+/* ---- disconnects: the engine owns the rules, the UI owns the timers ----
+   Seat held 10s for a reconnect with the same clientId (markDisconnected).
+   Back in time = resume the seat (reconnectClient). Back late = plain
+   withdrawal (withdrawDisconnected: cards back in the deck, seat lost)
+   and a return as a spectator. Three quick disconnect-reconnect cycles
+   in a row in the same room = banned from that room for its lifetime
+   (reconnectClient enforces it; the host just shows the banned screen). */
+function onGuestDisconnect(cid){
+  const wasSpectator=!!spectators[cid];
+  delete conns[cid];
+  if(wasSpectator){ delete spectators[cid]; return; }
+  if(!fullState||fullState.phase==='over'){
+    const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+    renderLobby(); return;
+  }
+  const seatId=(clients[cid]&&clients[cid].seatId)||null;
+  const lp=lobbyPlayers.find(p=>p.id===cid);
+  const name=(lp&&lp.name)||(clients[cid]&&clients[cid].name)||'Player';
+  const clientId=(clients[cid]&&clients[cid].clientId)||null;
+  if(!seatId||!clientId){
+    const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+    broadcastViews(); return;
+  }
+  const r=markDisconnected(fullState, seatId, Date.now());
+  if(!r.ok){
+    // Seat already gone (e.g. they left voluntarily first) — just tidy up.
+    const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+    broadcastViews(); return;
+  }
+  // 10s hold (+100ms slack so the grace check can never trip on timer drift).
+  const timer=setTimeout(()=>{ withdrawPlayer(cid, seatId, clientId); }, DISCONNECT_GRACE_MS+100);
+  disconnectedByClient[clientId]={cid, seatId, name, timer};
+  broadcastViews();
+}
+function withdrawPlayer(cid, seatId, clientId){
+  if(clientId) delete disconnectedByClient[clientId];
+  if(!fullState) return;
+  withdrawDisconnected(fullState, seatId, Date.now());
+  const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+  promoteWaitingSpectators();
+  broadcastViews();
+  if(fullState.phase==='over'||fullState.phase==='handOver') showOver();
+}
+/* A seat freed up (leave / withdrawal): promote a waiting pure spectator
+   (table was full when they joined) into a real seat. */
+function promoteWaitingSpectators(){
+  if(!fullState) return;
+  for(const cid of Object.keys(spectators)){
+    if(fullState.players.length>=6) break;
+    const w=spectators[cid];
+    const r=addPlayer(fullState, w.name, false, w.clientId||null);
+    if(!r.ok) continue;
+    delete spectators[cid];
+    conns[cid].gameId=r.playerId;
+    if(clients[cid]) clients[cid].seatId=r.playerId;
+    try{
+      conns[cid].send({t:'seat', yourId:r.playerId});
+      conns[cid].send({t:'view', view:filteredView(fullState, r.playerId), hash:stateFingerprint(fullState), yourId:r.playerId});
+    }catch(e){}
+  }
+}
+/* After a beginAnteRound (engine promotes waiting spectators into seats)
+   or a rejoin, make sure every seated client knows its seat id. */
+function syncSeatsToClients(){
+  if(!fullState||!isHost) return;
+  for(const cid of Object.keys(conns)){
+    const c=conns[cid]; if(!c||!c.open) continue;
+    const clientId=clients[cid]&&clients[cid].clientId;
+    if(!clientId) continue;
+    const p=fullState.players.find(x=>x.clientId===clientId);
+    if(p&&c.gameId!==p.id){
+      c.gameId=p.id;
+      if(clients[cid]) clients[cid].seatId=p.id;
+      try{ c.send({t:'seat', yourId:p.id}); }catch(e){}
+    }
+  }
+}
+function currentRoomInfo(){
+  const banned=(fullState&&fullState.bannedClientIds&&fullState.bannedClientIds.length?fullState.bannedClientIds:roomBanned);
+  return createRoomInfo({code:roomCode, hostName:myPlayerName(), players:lobbyPlayers.length, maxPlayers:roomMaxPlayers, bots:lobbyBots, ante:DEFAULT_ANTE, bannedClientIds:banned.slice(), status:fullState?'playing':'waiting'});
+}
+function registerPublicRoom(){
+  unregisterPublicRoom();
+  if(roomVisibility!=='public'||typeof Peer==='undefined') return;
+  let slot=1;
+  const trySlot=()=>{
+    if(slot>DIRECTORY_SLOTS){ return; }
+    const id=directoryPeerId(slot);
+    let p;
+    try{ p=new Peer(id); }catch(e){ return; }
+    dirSlot=slot;
+    p.on('open',()=>{ dirPeer=p; });
+    p.on('connection',c=>{
+      const answer=()=>{ try{ c.send({t:'room-info', room:currentRoomInfo()}); }catch(e){} };
+      c.on('open',answer);
+      c.on('data',msg=>{ if(msg&&msg.t==='list-query') answer(); });
+    });
+    p.on('error',err=>{
+      if(err&&err.type==='unavailable-id'){ try{ p.destroy(); }catch(e){} slot++; trySlot(); }
+      else { try{ p.destroy(); }catch(e){} dirPeer=null; dirSlot=0; }
+    });
+  };
+  trySlot();
+}
+function unregisterPublicRoom(){
+  if(dirPeer){ try{ dirPeer.destroy(); }catch(e){} dirPeer=null; dirSlot=0; }
+}
+function renderRoomsList(rooms, directoryOk){
+  const box=$('roomsList');
+  if(!rooms.length){
+    $('roomsMsg').textContent = directoryOk===false
+      ? 'Couldn\'t load the list — the directory didn\'t answer. Join with a code instead.'
+      : 'No public rooms right now — create one, or join a private lobby with its code.';
+    box.innerHTML='';
+    return;
+  }
+  $('roomsMsg').textContent=rooms.length+' public room'+(rooms.length===1?'':'s')+' open — tap one to join. (No auto-join: you always choose.)';
+  box.innerHTML=rooms.map(r=>{
+    const full=r.players>=r.maxPlayers;
+    const playing=r.status==='playing';
+    return '<div class="lobby-player"><span>🌍 <b>'+esc(r.hostName)+'</b> <span style="color:var(--mut)">· '+esc(r.code)+' · '+r.players+'/'+r.maxPlayers+' players'+(r.bots?' · '+r.bots+' bot'+(r.bots===1?'':'s'):'')+' · '+(playing?'playing':'waiting')+'</span></span>'+
+      (playing?'<span style="color:var(--mut)">playing</span>'
+        : full?'<span style="color:var(--mut)">full</span>'
+        : '<button type="button" class="small" data-room="'+esc(r.code)+'">Join →</button>')+'</div>';
+  }).join('');
+  box.querySelectorAll('[data-room]').forEach(b=>{ b.addEventListener('click',()=>joinRoom(b.getAttribute('data-room'))); });
+}
+function browsePublicRooms(){
+  if(typeof Peer==='undefined'){ $('roomsMsg').textContent='Couldn\'t load the list (multiplayer library unavailable) — join with a code instead.'; renderRoomsList([], false); return; }
+  $('roomsMsg').textContent='Asking the directory…';
+  $('roomsList').innerHTML='';
+  const rooms=[];
+  let probe, opened=false, finished=false;
+  const finish=()=>{ if(finished) return; finished=true; try{ probe.destroy(); }catch(e){} renderRoomsList(rooms, opened); };
+  try{ probe=new Peer(); }catch(e){ $('roomsMsg').textContent='Couldn\'t load the list — join with a code instead.'; return; }
+  setTimeout(finish, 5000);
+  probe.on('open',()=>{
+    opened=true;
+    for(let n=1;n<=DIRECTORY_SLOTS;n++){
+      const c=probe.connect(directoryPeerId(n),{reliable:true});
+      c.on('open',()=>{ try{ c.send({t:'list-query'}); }catch(e){} });
+      c.on('data',msg=>{
+        if(msg&&msg.t==='room-info'&&msg.room){
+          const info=createRoomInfo(msg.room);
+          if(info.code&&!rooms.find(r=>r.code===info.code)) rooms.push(info);
+          renderRoomsList(rooms, true);
+        }
+      });
+      c.on('error',()=>{});
+    }
+  });
+  probe.on('error',()=>{});
+}
+$('btnBrowseRooms').onclick=browsePublicRooms;
+$('btnRefreshRooms').onclick=browsePublicRooms;
+
+$('btnJoin').onclick=()=>{
+  const code=($('joinCode').value||'').trim().toUpperCase();
+  if(!code){ setMenuMsg('Type a lobby code first.'); return; }
+  joinRoom(code);
+};
+function joinRoom(code){
+  if(typeof Peer==='undefined'){ setMenuMsg('Could not load the multiplayer library (PeerJS). Check your connection and try again.'); return; }
+  roomCode=code; setMenuMsg('Joining lobby '+code+'…');
+  try{ if(peer) peer.destroy(); }catch(e){}
+  peer=new Peer();
+  peer.on('open',()=>{
+    const c=peer.connect(peerIdFor(code),{reliable:true});
+    conn=c;
+    c.on('data',msg=>handleGuestMsg(msg));
+    c.on('close',()=>{ onGuestConnClose(); });
+    c.on('open',()=>{ setMenuMsg('Joined lobby '+code+'! Say hi — waiting in the lobby…'); sendToHost({t:'join', name:myPlayerName(), clientId:getClientId()}); });
+    setTimeout(()=>{ if(!conn||!conn.open) setMenuMsg('Still trying to reach lobby '+code+' — is the code right, and is the host\'s lobby still open?'); },6000);
+  });
+  peer.on('error',err=>{ setMenuMsg('Could not join lobby '+code+' ('+(err&&err.type||'error')+'). Double-check the code.'); });
+}
+let reconnectTimer=null, disconnectAt=0, reconnectAttempt=0;
+function onGuestConnClose(){
+  stopHeartbeat(); stopHelloLoop();
+  if(!roomCode||reconnectTimer) return;
+  if(view&&(view.phase==='over')){ $('connBox').innerHTML='<b>Host disconnected.</b> The lobby is gone — head back to the menu for a new game.'; return; }
+  disconnectAt=Date.now(); reconnectAttempt=0;
+  $('connBox').innerHTML='<b>Connection lost — reconnecting…</b> Your seat is held for 10 seconds.';
+  const attempt=()=>{
+    reconnectTimer=null;
+    if(!roomCode) return;
+    if(Date.now()-disconnectAt>9000){ $('connBox').innerHTML='<b>Could not rejoin in time.</b> Your seat was withdrawn — rejoin from the menu to come back as a spectator.'; return; }
+    reconnectAttempt++;
+    joinRoom(roomCode);
+    reconnectTimer=setTimeout(attempt, reconnectAttempt===1?2500:3000);
+  };
+  reconnectTimer=setTimeout(attempt, 1200);
+}
+function handleHostMsg(cid, msg){
+  if(!msg||typeof msg!=='object') return;
+  if(msg.t==='join'){
+    // Reconnecting client? The engine decides: resume the seat (quick
+    // rejoin), come back as a spectator (late return), or banned (3rd
+    // quick quit in a row in this room).
+    if(msg.clientId&&fullState){
+      const known=fullState.players.some(p=>p.clientId===msg.clientId)
+        || (fullState.waitingSpectators||[]).some(w=>w.clientId===msg.clientId);
+      if(known){
+        if(disconnectedByClient[msg.clientId]){ clearTimeout(disconnectedByClient[msg.clientId].timer); delete disconnectedByClient[msg.clientId]; }
+        const rc=reconnectClient(fullState, msg.clientId, msg.name||'Player', Date.now());
+        if(rc.banned){
+          if(roomBanned.indexOf(msg.clientId)<0) roomBanned.push(msg.clientId);
+          try{ conns[cid].send({t:'banned'}); }catch(e){}
+          try{ conns[cid].close(); }catch(e){}
+          delete conns[cid];
+          broadcastViews();
+          return;
+        }
+        if(rc.ok&&(rc.resumed||rc.spectator)){
+          if(!rc.playerId){
+            // Still waiting — table full, no seat to give back yet.
+            clients[cid]={name:msg.name||'Player', clientId:msg.clientId};
+            spectators[cid]={name:msg.name||'Player', clientId:msg.clientId};
+            try{
+              conns[cid].send({t:'welcome', yourId:cid, code:roomCode});
+              conns[cid].send({t:'spectating', code:roomCode});
+              conns[cid].send({t:'view', view:filteredView(fullState, cid), hash:stateFingerprint(fullState), yourId:cid});
+            }catch(e){}
+            broadcastViews();
+            return;
+          }
+          conns[cid].gameId=rc.playerId;
+          clients[cid]={name:msg.name||'Player', clientId:msg.clientId, seatId:rc.playerId};
+          const lp=lobbyPlayers.find(p=>p.seatId===rc.playerId); if(lp) lp.id=cid;
+          try{
+            conns[cid].send({t:'welcome', yourId:cid, code:roomCode});
+            conns[cid].send({t:'seat', yourId:rc.playerId});
+            conns[cid].send({t:'view', view:filteredView(fullState, rc.playerId), hash:stateFingerprint(fullState), yourId:rc.playerId});
+          }catch(e){}
+          broadcastViews(); renderLobby();
+          return;
+        }
+        // Not ok (e.g. seat already live, or no seat left): fall through
+        // to the normal in-game join below, which re-seats them if a
+        // seat with their clientId already exists.
+      }
+    }
+    if(fullState){
+      // In-game join: seat them at once as a spectator for the current
+      // hand. They are automatically offered entry at the next ante
+      // round — no leaving and rejoining needed.
+      const existing=msg.clientId?fullState.players.find(p=>p.clientId===msg.clientId):null;
+      if(existing&&!existing.disconnected){
+        conns[cid].gameId=existing.id;
+        clients[cid]={name:msg.name||'Player', clientId:msg.clientId||null, seatId:existing.id};
+        try{
+          conns[cid].send({t:'welcome', yourId:cid, code:roomCode});
+          conns[cid].send({t:'seat', yourId:existing.id});
+          conns[cid].send({t:'view', view:filteredView(fullState, existing.id), hash:stateFingerprint(fullState), yourId:existing.id});
+        }catch(e){}
+        broadcastViews();
+        return;
+      }
+      if(fullState.players.length>=6){
+        // Table full: wait as a pure spectator until a seat frees up.
+        spectators[cid]={name:msg.name||'Player', clientId:msg.clientId||null};
+        clients[cid]={name:msg.name||'Player', clientId:msg.clientId||null};
+        try{
+          conns[cid].send({t:'welcome', yourId:cid, code:roomCode});
+          conns[cid].send({t:'spectating', code:roomCode});
+          conns[cid].send({t:'view', view:filteredView(fullState, cid), hash:stateFingerprint(fullState), yourId:cid});
+        }catch(e){}
+        fullState.log.push((msg.name||'Player')+' joined to spectate (table full) — they play when a seat frees up.');
+        broadcastViews();
+        return;
+      }
+      const r=addPlayer(fullState, msg.name||'Player', false, msg.clientId||null);
+      if(r.ok){
+        conns[cid].gameId=r.playerId;
+        clients[cid]={name:msg.name||'Player', clientId:msg.clientId||null, seatId:r.playerId};
+        try{
+          conns[cid].send({t:'welcome', yourId:cid, code:roomCode});
+          conns[cid].send({t:'seat', yourId:r.playerId});
+          conns[cid].send({t:'view', view:filteredView(fullState, r.playerId), hash:stateFingerprint(fullState), yourId:r.playerId});
+        }catch(e){}
+        broadcastViews();
+      }
+      return;
+    }
+    const check=canJoinRoom(currentRoomInfo(), lobbyPlayers.length, msg.clientId);
+    if(!check.ok){
+      try{ conns[cid].send({t:'join-rejected', error:check.error}); }catch(e){}
+      try{ conns[cid].close(); }catch(e){}
+      delete conns[cid];
+      return;
+    }
+    clients[cid]={name:msg.name||'Player', clientId:msg.clientId||null};
+    if(!lobbyPlayers.find(p=>p.id===cid)) lobbyPlayers.push({id:cid,name:msg.name||'Player',isBot:false});
+    renderLobby();
+    for(const id of Object.keys(conns)){ try{ conns[id].send({t:'lobby', players:lobbyPlayers, code:roomCode, maxPlayers:roomMaxPlayers, visibility:roomVisibility}); }catch(e){} }
+  } else if(msg.t==='action'){
+    if(!fullState) return;
+    if(spectators[cid]) return;
+    const seatId=(conns[cid]&&conns[cid].gameId)||cid;
+    const res=applyAction(fullState, seatId, msg.action);
+    if(res&&res.ok){
+      noteAction(msg.action, res, seatId);
+      if(msg.action.type==='leave'){
+        // Voluntary exit: seat freed at once (no 10s hold), conn closed.
+        const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+        promoteWaitingSpectators();
+        try{ conns[cid].send({t:'left'}); }catch(e){}
+        try{ conns[cid].close(); }catch(e){}
+        delete conns[cid]; delete clients[cid];
+        broadcastViews(); scheduleBots();
+        return;
+      }
+      try{ const ackView=filteredView(fullState, seatId); if(lastShotFx) ackView.shotFx=lastShotFx; conns[cid].send({t:'view', view:ackView, hash:stateFingerprint(fullState), ack:true, result:res, yourId:seatId}); }catch(e){}
+      broadcastViews(); scheduleBots();
+    } else {
+      try{ conns[cid].send({t:'action-error', error:res?res.error:'invalid action'}); }catch(e){}
+    }
+  } else if(msg.t==='leave'){
+    // A guest leaving without an in-game seat (e.g. from the lobby):
+    // just tidy up their lobby entry.
+    const ix=lobbyPlayers.findIndex(p=>p.id===cid); if(ix>=0){ lobbyPlayers.splice(ix,1); renderLobby(); }
+    try{ conns[cid].close(); }catch(e){}
+    delete conns[cid]; delete clients[cid];
+  } else if(msg.t==='hello'||msg.t==='need-sync'){
+    const seatId=(conns[cid]&&conns[cid].gameId)||cid;
+    if(fullState){ try{ const v=filteredView(fullState, seatId); if(lastShotFx) v.shotFx=lastShotFx; conns[cid].send({t:'view', view:v, hash:stateFingerprint(fullState), yourId:seatId}); }catch(e){} }
+  } else if(msg.t==='ping'){
+    const seatId=(conns[cid]&&conns[cid].gameId)||cid;
+    if(fullState&&msg.hash!==stateFingerprint(fullState)){ try{ const v=filteredView(fullState, seatId); if(lastShotFx) v.shotFx=lastShotFx; conns[cid].send({t:'view', view:v, hash:stateFingerprint(fullState), yourId:seatId}); }catch(e){} }
+  } else if(msg.t==='next-hand'){
+    if(fullState&&fullState.phase==='handOver'){
+      const r=applyAction(fullState, fullState.players[0].id, {type:'nextHand'});
+      if(r&&r.ok){ promoteWaitingSpectators(); broadcastViews(); scheduleBots(); }
+    }
+  }
+}
+function handleGuestMsg(msg){
+  if(!msg||typeof msg!=='object') return;
+  if(msg.t==='welcome'){ myId=msg.yourId; playMode='online'; stateReceived=false; startHelloLoop(); if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; } }
+  else if(msg.t==='seat'){ myId=msg.yourId; playMode='online'; isSpectator=false; }
+  else if(msg.t==='spectating'){ isSpectator=true; if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; } }
+  else if(msg.t==='banned'){
+    if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+    roomCode=null;
+    show('bannedModal',true);
+  }
+  else if(msg.t==='shot-off'){
+    $('overTitle').textContent='💥 You were shot off the table';
+    $('overBody').innerHTML='<p style="color:var(--mut);font-size:14px;line-height:1.6">The table turned on you. Your remaining chips were split among the shooters and your seat is gone.</p>';
+    show('btnOverNextHand',false);
+    show('overModal',true);
+    setTimeout(()=>{ hideOver(); backToMenu(); }, 4000);
+  }
+  else if(msg.t==='join-rejected'){
+    setMenuMsg('Could not join: '+(msg.error||'room is full.'));
+    try{ if(conn) conn.close(); }catch(e){}
+    try{ if(peer) peer.destroy(); }catch(e){}
+    conn=null; peer=null; roomCode=null;
+    show('lobbyScreen',false); show('gameScreen',false); show('menuScreen',true);
+  }
+  else if(msg.t==='lobby'){
+    lobbyPlayers=msg.players||lobbyPlayers; roomCode=msg.code||roomCode;
+    if(msg.maxPlayers) roomMaxPlayers=msg.maxPlayers;
+    if(msg.visibility) roomVisibility=msg.visibility;
+    showLobby();
+  }
+  else if(msg.t==='view'){
+    view=msg.view; stateReceived=true;
+    playMode='online';
+    if(msg.yourId!==undefined&&msg.yourId!==null) myId=msg.yourId;
+    if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+    if(view.players.some(p=>p.id===myId)) isSpectator=false;
+    show('menuScreen',false); show('lobbyScreen',false); show('gameScreen',true);
+    render();
+    if(view.phase==='handOver'||view.phase==='over') showOver();
+  }
+  else if(msg.t==='action-error'){ toast(msg.error||'That move was not allowed.'); }
+  else if(msg.t==='ping'){
+    if(view&&msg.hash!==viewHashOf(view)) sendToHost({t:'need-sync'});
+  }
+}
+$('btnCopyLobby').onclick=async()=>{
+  const link=location.origin+location.pathname+'?room='+roomCode;
+  const txt='Five-Card Draw lobby '+roomCode+' — join me: '+link;
+  try{ await navigator.clipboard.writeText(txt); $('btnCopyLobby').textContent='Copied!'; setTimeout(()=>$('btnCopyLobby').textContent='Copy code / link',1500); }
+  catch(e){ prompt('Copy your lobby link:',txt); }
+};
+$('btnLeaveLobby').onclick=backToMenu;
+$('btnStartGame').onclick=()=>{ if(isHost) startHostedGame(); };
+function startHostedGame(){
+  for(const k of Object.keys(disconnectedByClient)){
+    const d=disconnectedByClient[k]; clearTimeout(d.timer); delete disconnectedByClient[k];
+    const ix=lobbyPlayers.findIndex(p=>p.id===d.cid); if(ix>=0) lobbyPlayers.splice(ix,1);
+  }
+  const nextPlayers=lobbyPlayers.slice();
+  for(const cid of Object.keys(spectators)){
+    if(nextPlayers.length>=roomMaxPlayers) break;
+    nextPlayers.push({id:cid, name:spectators[cid].name, isBot:false});
+    delete spectators[cid];
+  }
+  if(nextPlayers.length<2){ toast('Need at least 2 players to start.'); return; }
+  lobbyPlayers=nextPlayers;
+  unregisterPublicRoom();
+  const names=lobbyPlayers.map(p=>({name:p.name,isBot:p.isBot,clientId:(clients[p.id]&&clients[p.id].clientId)||null}));
+  fullState=newGame(names, undefined, {ante: DEFAULT_ANTE});
+  const seatIds=fullState.players.map(p=>p.id);
+  const idMap={};
+  lobbyPlayers.forEach((p,i)=>{ idMap[p.id]=seatIds[i]; p.seatId=seatIds[i]; });
+  for(const cid of Object.keys(conns)){ const seat=idMap[cid]; if(seat){ conns[cid].gameId=seat; if(clients[cid]) clients[cid].seatId=seat; } }
+  myId=seatIds[0];
+  isHost=true; playMode='online'; gameId++;
+  drawSelected=new Set(); staged=[]; stagedBaseBet=0; lastDealtHand=0; seenLogCount=0;
+  applyAction(fullState, myId, {type:'startHand'});
+  show('lobbyScreen',false); show('menuScreen',false); show('gameScreen',true);
+  $('connBox').innerHTML='Lobby <b>'+roomCode+'</b> — you are the host. Ante is set fresh each hand — fastest click wins. Bots run on your device.';
+  for(const cid of Object.keys(conns)){
+    if(!idMap[cid]) continue;
+    try{ conns[cid].send({t:'seat', yourId:idMap[cid]}); conns[cid].send({t:'view', view:filteredView(fullState, idMap[cid]), hash:stateFingerprint(fullState), yourId:idMap[cid]}); }catch(e){}
+  }
+  broadcastViews(); startHeartbeat(); scheduleBots();
+}
+(function deepLink(){
+  try{
+    const q=new URLSearchParams(location.search);
+    const room=(q.get('room')||'').trim().toUpperCase();
+    if(room){ $('joinCode').value=room; setMenuMsg('Lobby '+room+' detected — press Join lobby to enter.'); }
+  }catch(e){}
+})();
+if(typeof window!=='undefined' && window.matchMedia){
+  const mq=matchMedia('(orientation: landscape) and (min-width: 700px)');
+  const onLayoutChange=()=>{ applyLayoutMode(); render(); };
+  if(mq.addEventListener) mq.addEventListener('change', onLayoutChange);
+  else if(mq.addListener) mq.addListener(onLayoutChange);
+}
+applyLayoutMode();
+</script>
+</body>
+</html>
