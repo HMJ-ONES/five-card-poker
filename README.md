@@ -152,17 +152,20 @@ node test/bot.test.js       # 100 bot-only hands (2-6 players) + 20 bot sessions
                             #   propose/enter + conservative betting)
 node test/whiskey.test.js   # 20 checks: sip thresholds, labels, durations, wobble
                             #   scoping, prefers-reduced-motion, sober-up
-node test/shootout.test.js  # 47 checks: trigger at 5 dead high-ante rounds
-                            #   not 4, low-ante dead rounds don't count,
+node test/shootout.test.js  # 49 checks: trigger at 3 dead high-ante rounds
+                            #   not 2, low-ante dead rounds don't count,
                             #   someone entering resets, different setter
                             #   resets, single shooter gets all, multiple
                             #   shooters split equally, 6-bullet cap, streak
                             #   reset + button clears, victim removal + turn
                             #   repair, hidden from the UI
-node test/ui.test.js        # 41 checks (jsdom): ante panel + propose/enter
+node test/ui.test.js        # 64 checks (jsdom): ante panel + propose/enter
                             #   through real DOM clicks, staged betting
                             #   (1600 staged, take-back, Bet Ready commit),
-                            #   dead-round panel, leave + banned screens exist
+                            #   dead-round panel, leave + banned screens exist,
+                            #   shootout mash (6 rapid real clicks all land,
+                            #   button stable, victim kicked after the 2s
+                            #   window) + guest fire-and-forget sends
 ```
 
 ## Deploy to Cloudflare Pages ($0)
@@ -200,8 +203,8 @@ LICENSE               MIT
 
 The game contains one secret rule that is deliberately **not** documented in the in-game Rules, How to Play, menu help, or any visible UI text — only code comments describe it, and this section of the README (which players never see in-game) states it once:
 
-- **The ONLY trigger is the entry ante.** If the **same player** sets a **very large entry ante (500 or 1000 chips)** to start the game **five times in a row** and **nobody enters in any of those rounds** — so they are just dead rounds — then every **other human player** in the room (not the setter, not bots, not spectators) gets a red pulsing **"🔫 Shoot'em Dead"** button (fixed bottom corner). Winning hands have **nothing** to do with it — a 5-hand win streak never arms it. A low-ante dead round, someone entering, a different setter, or the setter leaving all reset the count to zero; a hand starting disarms it.
-- Each press fires **one bullet**, max **6 presses** per player per armed episode (revolver chambers shown as dots). Each shot plays a synthesized gunshot (WebAudio, no audio file), a muzzle flash, and a screen shake, and everyone sees "[Name] fired at [Victim]!". On the **first** shot a **2.0-second window** opens; every player who fired at least once in that window counts as a shooter. At window end the victim is **removed/disconnected** (seat removed, hand mucked, turn repaired, bets already in the pot stay in the pot) and their **remaining chip stack** (chips NOT in the pot) is **split equally among the shooters** (integer division, remainder 1 chip each to the earliest shooters clockwise from the dealer); a lone shooter gets it all. The streak resets, the button disappears. The victim's client shows "You were shot off the table" and returns to the menu. If the victim is a bot, the same removal + split applies. If the victim leaves on their own before the window ends, the shootout is cancelled with no payout. Shots fired after the window closes pay nothing.
+- **The ONLY trigger is the entry ante.** If the **same player** sets a **very large entry ante (500 or 1000 chips)** to start the game **three times in a row** and **nobody enters in any of those rounds** — so they are just dead rounds — then every **other human player** in the room (not the setter, not bots, not spectators) gets a red pulsing **"🔫 Shoot'em Dead"** button (fixed bottom corner). Winning hands have **nothing** to do with it — a 5-hand win streak never arms it. A low-ante dead round, someone entering, a different setter, or the setter leaving all reset the count to zero; a hand starting disarms it.
+- Each press fires **one bullet**, max **6 presses** per player per armed episode (revolver chambers shown as dots). The button's chambers update in place and the gunshot shakes the table (not the whole screen), so all 6 presses land even when mashed inside the window — rapid taps are never dropped by a re-render or a jumping button. Each shot plays a synthesized gunshot (WebAudio, no audio file), a muzzle flash, and a screen shake, and everyone sees "[Name] fired at [Victim]!". On the **first** shot a **2.0-second window** opens; every player who fired at least once in that window counts as a shooter. At window end the victim is **removed/disconnected** (seat removed, hand mucked, turn repaired, bets already in the pot stay in the pot) and their **remaining chip stack** (chips NOT in the pot) is **split equally among the shooters** (integer division, remainder 1 chip each to the earliest shooters clockwise from the dealer); a lone shooter gets it all. The streak resets, the button disappears. The victim's client shows "You were shot off the table" and returns to the menu. If the victim is a bot, the same removal + split applies. If the victim leaves on their own before the window ends, the shootout is cancelled with no payout. Shots fired after the window closes pay nothing.
 
 ## License
 

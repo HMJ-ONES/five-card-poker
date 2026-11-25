@@ -114,6 +114,73 @@ function check(name, cond, extra) {
   check('dead-round note shows', !$('anteDeadNote').classList.contains('hidden') && /Dead round/.test($('anteDeadNote').textContent));
   check('dead-high streak is 1', ev(`fullState.shootout.deadStreak`) === 1);
 
+  /* ---- scenario 3: Shoot'em Dead — one player mashes the button 6 times ----
+     The engine always allowed 6 bullets, but in practice rapid taps never
+     landed: render() rebuilt the button's innerHTML on every shot (the tap
+     target vanished mid-mash) and the full-page shake dragged the fixed
+     button around under the finger. Both are fixed: static button children
+     updated in place, touch-action:manipulation, shake scoped to the table. */
+  window.eval(`startLocalGame([{name:'Test',isBot:false},{name:'Bot1',isBot:true},{name:'Bot2',isBot:true}], 44, {ante:10})`);
+  check('shoot button has touch-action manipulation for rapid taps', /#shootBtn\{[^}]*touch-action:\s*manipulation/.test(html));
+  check('render never rebuilds the shoot button innerHTML', !/\$\('shootBtn'\)\.innerHTML/.test(html));
+  check('gunshot shakes the table, not the body', /\.table-wrap\.shake\{/.test(html) && !/body\.shake/.test(html));
+  check('shoot button has static children (count + 6 chambers)', !!$('shootCount') && window.document.querySelectorAll('#shootChambers span').length === 6);
+  // Arm it: bot p1 sets a 500 ante three dead rounds in a row; I decline each time.
+  for (let r = 0; r < 3; r++) {
+    ev(`applyAction(fullState, 'p1', {type:'proposeAnte', amount:500})`);
+    ev(`applyAction(fullState, myId, {type:'enterHand', enter:false})`);
+    ev(`applyAction(fullState, 'p2', botChooseAction(fullState, 'p2'))`); // bot declines 500+
+    ev(`refreshView(); render();`);
+  }
+  check('shootout armed after 3 dead high rounds (not 5)', ev(`fullState.shootout.armed`) === true && ev(`fullState.shootout.victimId`) === 'p1');
+  check('shoot button shows for me (not the victim)', !$('shootBtn').classList.contains('hidden') && ev(`view.shootout.canShoot`) === true);
+  // The button and its children are stable nodes across re-renders.
+  const btnBefore = $('shootBtn');
+  const dotBefore = window.document.querySelector('#shootChambers span');
+  ev(`refreshView(); render();`);
+  check('shoot button node is stable across re-renders', $('shootBtn') === btnBefore);
+  check('chamber dots are the same nodes after a re-render', window.document.querySelector('#shootChambers span') === dotBefore);
+  // Mash it: 6 rapid real clicks through the DOM handler.
+  for (let i = 0; i < 6; i++) $('shootBtn').click();
+  check('all 6 rapid clicks land', ev(`fullState.shootout.shots[myId]`) === 6 && ev(`view.shootout.shotsFired`) === 6, 'shots=' + ev(`fullState.shootout.shots[myId]`));
+  check('button shows 0 bullets left and disables at 6', $('shootBtn').disabled === true && /0 bullets left/.test($('shootCount').textContent));
+  check('all 6 chamber dots are spent', window.document.querySelectorAll('#shootChambers span.spent').length === 6);
+  $('shootBtn').click();
+  check('a 7th click fires nothing (button disabled at 6)', ev(`fullState.shootout.shots[myId]`) === 6);
+  // The real 2s host timer resolves the episode: victim kicked, I take it all.
+  const stackBefore = ev(`view.players.find(p=>p.id===myId).stack`);
+  await new Promise(r => setTimeout(r, 2200));
+  check('victim is kicked after the window closes', ev(`fullState.shootout.armed`) === false && ev(`playerById(fullState, 'p1')`) === null);
+  check('lone shooter takes the whole victim stack', ev(`view.players.find(p=>p.id===myId).stack`) === stackBefore + 5000, 'stack=' + ev(`view.players.find(p=>p.id===myId).stack`));
+  check('shoot button hides after resolution', $('shootBtn').classList.contains('hidden'));
+
+  /* ---- scenario 4: guest path — presses are fire-and-forget, none dropped ----
+     A guest sends each press straight to the host and never waits for an ack;
+     the host applies each action the moment it arrives (verified by reading
+     the host's msg.t==='action' handler: no queue, no dedupe, no throttle). */
+  window.eval(`startLocalGame([{name:'Test',isBot:false},{name:'Bot1',isBot:true},{name:'Bot2',isBot:true}], 45, {ante:10})`);
+  for (let r = 0; r < 3; r++) {
+    ev(`applyAction(fullState, 'p1', {type:'proposeAnte', amount:500})`);
+    ev(`applyAction(fullState, myId, {type:'enterHand', enter:false})`);
+    ev(`applyAction(fullState, 'p2', botChooseAction(fullState, 'p2'))`);
+    ev(`refreshView(); render();`);
+  }
+  check('guest scenario: shootout armed', ev(`fullState.shootout.armed`) === true);
+  // Flip this client to guest: capture every outbound message instead of PeerJS.
+  window.__sent = [];
+  ev(`playMode='online'; isHost=false; conn={open:true, send:(o)=>{ window.__sent.push(o); }};`);
+  for (let i = 0; i < 6; i++) $('shootBtn').click();
+  const shotSends = window.__sent.filter(m => m.t === 'action' && m.action && m.action.type === 'shoot');
+  check('guest sends all 6 presses immediately (no ack-waiting)', shotSends.length === 6, 'sent ' + shotSends.length);
+  // Simulate the host applying them in order, exactly as its handler does.
+  ev(`for (const m of window.__sent.filter(m=>m.t==='action')) { applyAction(fullState, myId, m.action); }`);
+  ev(`refreshView(); render();`);
+  check('host lands all 6 guest shots', ev(`fullState.shootout.shots[myId]`) === 6);
+  const res4 = ev(`resolveShootout(fullState, Date.now())`);
+  ev(`refreshView(); render();`);
+  check('guest shots resolve: victim kicked, lone shooter takes all',
+    res4.resolved === true && ev(`playerById(fullState, 'p1')`) === null && ev(`view.players.find(p=>p.id===myId).stack`) === 10000);
+
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })().catch(e => { console.error('UI TEST CRASHED:', e); process.exit(1); });

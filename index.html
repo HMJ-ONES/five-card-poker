@@ -191,18 +191,19 @@ body.round-table #chipRack{position:absolute;left:50%;top:68%;transform:translat
 @media (prefers-reduced-motion: reduce){ .fly-card{transition:none} }
 /* ---- Shoot'em Dead (hidden rule — the button only ever appears when
    the secret trigger arms it; it is never mentioned in the Rules) ---- */
-#shootBtn{position:fixed;right:16px;bottom:16px;z-index:80;background:#7f1d1d;color:#fff;border:3px solid #ef4444;font-size:18px;padding:14px 18px;border-radius:14px;box-shadow:0 0 24px rgba(239,68,68,.7);animation:shootpulse 1s infinite}
+#shootBtn{position:fixed;right:16px;bottom:16px;z-index:80;background:#7f1d1d;color:#fff;border:3px solid #ef4444;font-size:18px;padding:14px 18px;border-radius:14px;box-shadow:0 0 24px rgba(239,68,68,.7);animation:shootpulse 1s infinite;touch-action:manipulation;user-select:none;-webkit-tap-highlight-color:transparent}
+.shoot-count{font-size:13px}
 @keyframes shootpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .chambers{display:flex;gap:6px;justify-content:center;margin-top:8px}
 .chambers span{width:14px;height:14px;border-radius:50%;border:2px solid #fca5a5;background:transparent}
 .chambers span.spent{background:#ef4444}
 .muzzle{position:fixed;inset:0;z-index:90;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,220,120,.85),rgba(255,120,0,.35) 30%,transparent 60%);opacity:0;transition:opacity .12s}
 .muzzle.on{opacity:1}
-body.shake{animation:shakeanim .5s ease}
+.table-wrap.shake{animation:shakeanim .5s ease}
 @keyframes shakeanim{0%,100%{transform:translate(0,0)}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(4px,3px)}}
 .victim-flash{animation:vflash .5s ease 3}
 @keyframes vflash{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 24px 6px rgba(239,68,68,.8)}}
-@media (prefers-reduced-motion: reduce){ body.shake{animation:none} #shootBtn{animation:none} }
+@media (prefers-reduced-motion: reduce){ .table-wrap.shake{animation:none} #shootBtn{animation:none} }
 </style>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -413,7 +414,7 @@ Lobbies run peer-to-peer in your browser (WebRTC) — no game server, no cost, n
   </div>
 </div></div>
 
-<button id="shootBtn" type="button" class="hidden">🔫 Shoot'em Dead</button>
+<button id="shootBtn" type="button" class="hidden"><span class="shoot-label">🔫 Shoot'em Dead</span> <span class="shoot-count" id="shootCount"></span><span class="chambers" id="shootChambers"><span></span><span></span><span></span><span></span><span></span><span></span></span></button>
 <div class="muzzle" id="muzzle"></div>
 <script>
 "use strict";
@@ -430,6 +431,7 @@ const RANK_VALUE = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':
 const MAX_DRAW = 3;
 const HIGH_ANTE = 500;       // a "very large" entry ante (500 or 1000)
 const SHOOTOUT_BULLETS = 6;  // revolver chambers per player per episode
+const SHOOTOUT_DEAD_ROUNDS = 3; // dead high-ante rounds in a row that arm the shootout
 const SHOOTOUT_WINDOW_MS = 2000;
 const DISCONNECT_GRACE_MS = 10000; // a disconnected seat is held this long for a reconnect
 const MAX_QUICK_RECONNECTS = 3;    // quick disconnect-reconnect cycles before a room ban
@@ -636,9 +638,9 @@ function resolveAnteRound(st){
     // A low-ante dead round breaks the streak — and disarms an armed episode.
     so.deadStreak=0; so.deadSetterId=null; disarmShootout(st);
   }
-  if(so.deadStreak>=5 && so.deadSetterId){
+  if(so.deadStreak>=SHOOTOUT_DEAD_ROUNDS && so.deadSetterId){
     so.armed=true; so.victimId=so.deadSetterId; so.shots={}; so.windowEndsAt=null;
-    st.log.push((playerById(st, so.victimId)||{}).name+' set a '+HIGH_ANTE+'+ ante five dead rounds in a row…');
+    st.log.push((playerById(st, so.victimId)||{}).name+' set a '+HIGH_ANTE+'+ ante three dead rounds in a row…');
   }
   return beginAnteRound(st);
 }
@@ -1380,7 +1382,7 @@ function seatPositionsFor(n, cx, cy, rx, ry){
   for(let i=0;i<n;i++){ const a=(Math.PI/2)+(i/n)*Math.PI*2; out.push({x:cx+rx*Math.cos(a), y:cy+ry*Math.sin(a)}); }
   return out;
 }
-if(typeof module!=='undefined'&&module.exports){ module.exports={STARTING_STACK,ANTE_OPTIONS,DEFAULT_ANTE,HIGH_ANTE,RANKS,SUITS,RANK_VALUE,MAX_DRAW,SHOOTOUT_BULLETS,SHOOTOUT_WINDOW_MS,DISCONNECT_GRACE_MS,MAX_QUICK_RECONNECTS,mulberry32,randomSeed,shuffle,buildDeck,ordinal,evaluateHand,handName,compareHands,newGame,createGameState,currentPlayer,playerById,startHand,beginAnteRound,proposeAnte,enterHand,computePayouts,applyAction,applyBetTotal,legalActions,filteredView,stateFingerprint,serializeState,deserializeState,removePlayer,addPlayer,fireShot,resolveShootout,cancelShootout,disarmShootout,isShootoutArmed,markDisconnected,reconnectClient,withdrawDisconnected,banClient,isBanned,botDrawSlots,botChooseAction,botProposeAnte,botEnterHand,DIRECTORY_SLOTS,directoryPeerId,createRoomInfo,canJoinRoom,layoutModeFor,seatPositionsFor}; }
+if(typeof module!=='undefined'&&module.exports){ module.exports={STARTING_STACK,ANTE_OPTIONS,DEFAULT_ANTE,HIGH_ANTE,RANKS,SUITS,RANK_VALUE,MAX_DRAW,SHOOTOUT_BULLETS,SHOOTOUT_DEAD_ROUNDS,SHOOTOUT_WINDOW_MS,DISCONNECT_GRACE_MS,MAX_QUICK_RECONNECTS,mulberry32,randomSeed,shuffle,buildDeck,ordinal,evaluateHand,handName,compareHands,newGame,createGameState,currentPlayer,playerById,startHand,beginAnteRound,proposeAnte,enterHand,computePayouts,applyAction,applyBetTotal,legalActions,filteredView,stateFingerprint,serializeState,deserializeState,removePlayer,addPlayer,fireShot,resolveShootout,cancelShootout,disarmShootout,isShootoutArmed,markDisconnected,reconnectClient,withdrawDisconnected,banClient,isBanned,botDrawSlots,botChooseAction,botProposeAnte,botEnterHand,DIRECTORY_SLOTS,directoryPeerId,createRoomInfo,canJoinRoom,layoutModeFor,seatPositionsFor}; }
 </script>
 <script>
 "use strict";
@@ -1536,7 +1538,12 @@ function gunshotFx(victimId){
   playGunshot();
   const m=$('muzzle'); m.classList.add('on');
   setTimeout(()=>m.classList.remove('on'), 140);
-  document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake');
+  // The shake is scoped to the TABLE, never the whole page: the shoot
+  // button is position:fixed, so a transform on <body> drags it around
+  // under the shooter's finger while they mash it — shots 2-6 would
+  // land on empty space and never register.
+  const tbl=document.querySelector('.table-wrap');
+  if(tbl){ tbl.classList.remove('shake'); void tbl.offsetWidth; tbl.classList.add('shake'); }
   if(victimId){
     const wrap=document.querySelector('.scards[data-pid="'+victimId+'"]');
     const seat=wrap?wrap.closest('.seat'):null;
@@ -1774,13 +1781,19 @@ function render(){
   show('btnNextHand', handOver&&(playMode==='local'||isHost));
   show('btnRebuy', handOver&&me&&me.stack===0&&!isSpec);
   // shoot button (secret rule): only for other human players, when armed.
+  // The button's children are STATIC (built once in the markup) and are
+  // updated in place here — never innerHTML. Rebuilding the button on
+  // every shot replaced the tap target mid-mash on phones and dropped
+  // taps, so the owner could not land all 6 bullets in the 2s window.
   const shoot=view.shootout||{};
   const showShoot=!!(shoot.armed&&shoot.canShoot);
   show('shootBtn', showShoot);
   if(showShoot){
     const fired=shoot.shotsFired||0;
-    $('shootBtn').innerHTML='🔫 Shoot\'em Dead <span style="font-size:13px">('+(6-fired)+' bullets left)</span><span class="chambers">'+[0,1,2,3,4,5].map(i=>'<span class="'+(i<fired?'spent':'')+'"></span>').join('')+'</span>';
-    $('shootBtn').disabled=fired>=6;
+    $('shootCount').textContent='('+(SHOOTOUT_BULLETS-fired)+' bullets left)';
+    const dots=$('shootChambers').children;
+    for(let i=0;i<dots.length;i++) dots[i].classList.toggle('spent', i<fired);
+    $('shootBtn').disabled=fired>=SHOOTOUT_BULLETS;
   }
   // log
   $('logBox').innerHTML=(view.log||[]).map(l=>'<div>'+esc(l)+'</div>').join('');
