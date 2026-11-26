@@ -4,7 +4,7 @@
 
 Play it right now — no sign-up, no download, no cost. PC and mobile. Free play chips only — no real money, no accounts, no database.
 
-**v1.1** — every hand opens with an explicit ante round (fastest click sets the entry amount; top up to enter or spectate), staged chip betting with a Bet Ready button, spectators auto-offered entry next hand, a 10-second rejoin with a 3-quick-quit room ban, calmer bots, and card deal/draw animations.
+**v1.2** — every hand opens with an explicit ante round (fastest click sets the entry amount; top up to enter or spectate), staged chip betting with a Bet Ready button, spectators auto-offered entry next hand, a 10-second rejoin with a 3-quick-quit room ban, calmer bots, and card deal/draw animations. Plus a 7-language switcher (EN / PT / ES / ZH / JA / FR / KO) at the top of the page — every menu, lobby, table, log and rules string is translated, the choice is remembered, and English is the fallback.
 
 ## The game
 
@@ -166,6 +166,18 @@ node test/ui.test.js        # 64 checks (jsdom): ante panel + propose/enter
                             #   shootout mash (6 rapid real clicks all land,
                             #   button stable, victim kicked after the 2s
                             #   window) + guest fire-and-forget sends
+node test/layout.test.js    # 58 checks (jsdom): compact landscape layout,
+                            #   100dvh game screen, clamp-sized cards, no
+                            #   overlap with the language switcher
+node test/i18n.test.js      # 58 checks (jsdom): 7-language switcher (en/pt/
+                            #   es/zh/ja/fr/ko) — every key present in all 7
+                            #   languages, switching changes visible text,
+                            #   choice persists in localStorage under 'lang',
+                            #   navigator.language mapping, English fallback,
+                            #   mid-game switch re-renders status/log/buttons,
+                            #   log + error strings translated at display time
+                            #   (engine stays English), hidden rule never
+                            #   appears in any translation
 ```
 
 ## Deploy to Cloudflare Pages ($0)
@@ -194,6 +206,8 @@ test/bot.test.js      bot stress test: 100 bot-only hands + 20 sessions + script
 test/whiskey.test.js  whiskey button thresholds + wobble scoping tests (node)
 test/shootout.test.js secret-rule tests (node)
 test/ui.test.js       UI smoke test: real page in jsdom, ante + staged betting + dead rounds (node)
+test/layout.test.js   compact-landscape layout tests (node)
+test/i18n.test.js     7-language switcher tests: dictionary completeness, switching, persistence, fallback (node)
 wrangler.toml         Cloudflare Pages config (Pages needs no config; no Worker)
 README.md             this file
 LICENSE               MIT
